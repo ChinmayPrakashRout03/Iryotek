@@ -1,0 +1,19 @@
+.git
+.gitignore
+.dockerignore
+.vscode/
+.settings/
+.project
+.classpath
+*.war
+*target/
+Iryotek/target/
+**/target/
+*.DS_Store
+README.md
+AGENTS.md
+import_dataset.sql
+indian_doctors_dataset.csv
+indian_doctors_dataset.xlsx
+generate_import_sql.py
+/ Iryotek portal/

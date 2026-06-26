@@ -1,0 +1,11 @@
+target/
+.idea/
+.vscode/
+.classpath
+.project
+.settings/
+.DS_Store
+*.log
+.env
+db.properties
+seed_data.sql

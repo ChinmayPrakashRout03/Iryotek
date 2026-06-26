@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: iryotek
+    env: docker
+    plan: free
+    envVars:
+      - key: DB_URL
+        sync: false
+        placeholder: "e.g., jdbc:mysql://YOUR_DB_HOST:3306/YOUR_DB_NAME"
+      - key: DB_USER
+        sync: false
+        placeholder: "e.g., dbuser"
+      - key: DB_PASSWORD
+        sync: false
+        placeholder: "e.g., dbpassword"

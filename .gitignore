@@ -1,0 +1,15 @@
+# Maven
+target/
+*.war
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# IDE / OS Files
+.DS_Store
+.vscode/
+.settings/
+.project
+.classpath
+*.class
