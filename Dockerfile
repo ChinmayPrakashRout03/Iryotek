@@ -1,12 +1,12 @@
 # Stage 1: Build the Maven application
-FROM maven:3.8.8-eclipse-temurin-11 AS build
+FROM maven:3.9-eclipse-temurin-17 AS build
 WORKDIR /app
 COPY Iryotek/pom.xml ./Iryotek/
 COPY Iryotek/src ./Iryotek/src/
 RUN mvn -f Iryotek/pom.xml clean package
 
 # Stage 2: Run inside a Tomcat 9 lightweight container
-FROM tomcat:9.0-jre11-slim
+FROM tomcat:9.0-jre17
 WORKDIR /usr/local/tomcat
 
 # Remove default ROOT application to deploy our app at the root URL path
