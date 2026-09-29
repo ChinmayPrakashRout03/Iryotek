@@ -70,76 +70,90 @@
 						<!-- End of message print -->
 
 						<!-- table for patient list -->
+						<div class="table-responsive">
+							<table class="table align-middle table-hover text-center mb-0" style="min-width: 950px;">
+								<thead class="my-bg-color text-white">
+									<tr style="font-size: 0.85rem; letter-spacing: 0.5px; text-transform: uppercase;">
+										<th scope="col" class="py-3 px-3">Full Name</th>
+										<th scope="col" class="py-3 px-2">Gender</th>
+										<th scope="col" class="py-3 px-2">Age</th>
+										<th scope="col" class="py-3 px-3">Date</th>
+										<th scope="col" class="py-3 px-2">Token</th>
+										<th scope="col" class="py-3 px-3">Time Slot</th>
+										<th scope="col" class="py-3 px-3">Email</th>
+										<th scope="col" class="py-3 px-3">Phone</th>
+										<th scope="col" class="py-3 px-3">Diseases</th>
+										<th scope="col" class="py-3 px-2">Status</th>
+										<th scope="col" class="py-3 px-3">Action</th>
+									</tr>
+								</thead>
+								<tbody>
+									<%
+									Doctor doctor = (Doctor) session.getAttribute("doctorObj");
+									AppointmentDAO appDAO = new AppointmentDAO(DBConnection.getConn());
+									List<Appointment> list = appDAO.getAllAppointmentByLoginDoctor(doctor.getId());
+									if (list != null && !list.isEmpty()) {
+										for (Appointment applist : list) {
+									%>
 
-						<table class="table table-striped">
-							<thead>
-								<tr>
-									<th scope="col" style="padding-right: 100px">Full Name</th>
-									<th scope="col">Gender</th>
-									<th scope="col">Age</th>
-									<th scope="col">Appointment Date</th>
-									<th scope="col">Token No</th>
-									<th scope="col">Time Slot</th>
-									<th scope="col">Email</th>
-									<th scope="col">Phone</th>
-									<th scope="col">Diseases</th>
-									<th scope="col">Status</th>
-									<th scope="col">Action</th>
-								</tr>
-							</thead>
-							<tbody>
+									<tr>
+										<td class="fw-bold text-dark px-3"><%=applist.getFullName()%></td>
+										<td class="text-capitalize px-2"><%=applist.getGender()%></td>
+										<td class="px-2"><%=applist.getAge()%></td>
+										<td class="px-3"><%=applist.getAppointmentDate()%></td>
+										<td class="px-2">
+											<span class="badge bg-danger rounded-pill px-3 py-2 fs-6 shadow-sm"><%=applist.getTokenNo()%></span>
+										</td>
+										<td class="px-3"><strong class="myP-color"><%=applist.getAppointmentTime()%></strong></td>
+										<td class="px-3"><%=applist.getEmail()%></td>
+										<td class="px-3"><%=applist.getPhone()%></td>
+										<td class="px-3"><span class="badge bg-light text-dark border px-2 py-1"><%=applist.getDiseases()%></span></td>
+										<td class="px-2">
+											<%
+											if ("Pending".equals(applist.getStatus())) {
+											%> 
+												<span class="badge bg-warning text-dark px-3 py-2 rounded-pill"><i class="fa-solid fa-spinner fa-spin me-1"></i> Pending</span> 
+											<%
+											} else {
+											%> 
+												<span class="badge bg-success px-3 py-2 rounded-pill"><i class="fa-solid fa-check me-1"></i> <%=applist.getStatus()%></span> 
+											<%
+											}
+											%>
+										</td>
+										<td class="px-3">
+											<%
+											if ("Pending".equals(applist.getStatus())) {
+											%> 
+												<a href="comment.jsp?id=<%=applist.getId()%>" class="btn btn-success btn-sm px-3 rounded-pill">
+													<i class="fa-solid fa-stethoscope me-1"></i> Prescription
+												</a> 
+											<%
+											} else {
+											%> 
+												<span class="text-muted fs-7"><i class="fa-solid fa-check-double text-success"></i> Treated</span>
+											<%
+											}
+											%>
+										</td>
+									</tr>
 
-								<%
-								Doctor doctor = (Doctor) session.getAttribute("doctorObj");
-
-								//DoctorDAO docDAO = new DoctorDAO(DBConnection.getConn());
-								AppointmentDAO appDAO = new AppointmentDAO(DBConnection.getConn());
-								List<Appointment> list = appDAO.getAllAppointmentByLoginDoctor(doctor.getId());
-								for (Appointment applist : list) {
-								%>
-
-								<tr>
-									<th><%=applist.getFullName()%></th>
-									<td><%=applist.getGender()%></td>
-									<td><%=applist.getAge()%></td>
-									<td><%=applist.getAppointmentDate()%></td>
-									<td><span class="badge bg-success" style="font-size: 0.9rem; padding: 6px 12px; background-color: var(--primary-dark) !important;"><%=applist.getTokenNo()%></span></td>
-									<td><strong><%=applist.getAppointmentTime()%></strong></td>
-									<td><%=applist.getEmail()%></td>
-									<td><%=applist.getPhone()%></td>
-									<td><%=applist.getDiseases()%></td>
-									<td><%=applist.getStatus()%></td>
-
-									<td>
-										<%
-										if ("Pending".equals(applist.getStatus())) {
-										%> <a href="comment.jsp?id=<%=applist.getId()%>"
-										class="btn btn-success btn-sm">Comment / Prescription</a> 
-										<%
- 										} else {
- 										%> 
- 										 <a href="#!" class="btn btn-success btn-sm disabled"><i
-											class="fa fa-comment"></i> Comment / Prescription</a>
-											 
-										<%
- 										}
- 										%>
-
-
-									</td>
-									
-								</tr>
-
-
-
-								<%
-								}
-								%>
-
-
-							</tbody>
-						</table>
-
+									<%
+										}
+									} else {
+									%>
+									<tr>
+										<td colspan="11" class="text-center py-5 text-muted fs-5">
+											<i class="fa-solid fa-calendar-minus mb-2 d-block fs-1"></i>
+											No patient appointments assigned yet.
+										</td>
+									</tr>
+									<%
+									}
+									%>
+								</tbody>
+							</table>
+						</div>
 						<!-- end table for doctor list -->
 
 

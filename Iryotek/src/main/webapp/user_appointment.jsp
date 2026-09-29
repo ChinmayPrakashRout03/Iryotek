@@ -8,11 +8,34 @@
 	pageEncoding="UTF-8"%>
 
 
-<!-- for jstl tag -->
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <!-- end of jstl tag -->
 
 <%@page isELIgnored="false"%>
+
+<c:if test="${empty userObj}">
+	<c:set var="errorMsg" value="Please login first to book an appointment." scope="session" />
+	<c:redirect url="user_login.jsp" />
+</c:if>
+
+<%
+HospitalDAO hospDAO = new HospitalDAO(DBConnection.getConn());
+String preSelectedHospitalId = request.getParameter("hospitalId");
+Hospital preSelectedHospital = null;
+String selectedState = "";
+String selectedCity = "";
+if (preSelectedHospitalId != null) {
+    try {
+        preSelectedHospital = hospDAO.getHospitalById(Integer.parseInt(preSelectedHospitalId));
+        if (preSelectedHospital != null) {
+            selectedState = preSelectedHospital.getState();
+            selectedCity = preSelectedHospital.getCity();
+        }
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
+}
+%>
 
 
 <!DOCTYPE html>
@@ -21,7 +44,7 @@
 <meta charset="UTF-8">
 <title>User Appointment Page</title>
 <!-- all css include -->
-<%@include file="../component/allcss.jsp"%>
+<%@include file="component/allcss.jsp"%>
 
 <!-- customs css for this page -->
 <style type="text/css">
@@ -39,172 +62,163 @@
 <body>
 	<%@include file="component/navbar.jsp"%>
 
-	<!-- start 1st Div -->
+	<!-- Page Breadcrumb Header Banner (Dark Green #0b3c36) -->
+	<section class="medipro-page-header text-center py-5 text-white" style="background-color: var(--medipro-dark-green);">
+		<div class="container py-4">
+			<h1 class="display-4 fw-extrabold text-coral mb-2">Appointment Booking</h1>
+			<p class="fs-6 text-white-50">Home &raquo; Appointment Booking</p>
+		</div>
+	</section>
 
-	<div class="container-fluid my-bg-img p-5">
-		<!-- css background image -->
-		<p class="text-center fs-2 text-white"></p>
+	<!-- Main Appointment Booking Section -->
+	<section class="py-5" style="background-color: var(--medipro-cream-bg);">
+		<div class="container py-4">
+			<!-- Split Booking Widget Card -->
+			<div class="row g-0 rounded-4 overflow-hidden shadow-lg mb-5" style="background-color: var(--medipro-dark-card);">
+				<!-- Left Column: Form Fields (Dark Green #0e3831) -->
+				<div class="col-lg-8 p-4 p-md-5 text-white">
+					<!-- Message print -->
+					<c:if test="${not empty successMsg}">
+						<div class="alert alert-success alert-dismissible fade show text-center" role="alert">
+							<i class="fa-solid fa-circle-check me-2"></i> ${successMsg}
+							<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+						</div>
+						<c:remove var="successMsg" scope="session" />
+					</c:if>
+					<c:if test="${not empty errorMsg}">
+						<div class="alert alert-danger alert-dismissible fade show text-center" role="alert">
+							<i class="fa-solid fa-triangle-exclamation me-2"></i> ${errorMsg}
+							<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+						</div>
+						<c:remove var="errorMsg" scope="session" />
+					</c:if>
 
-	</div>
+					<form class="row g-3" action="addAppointment" method="post">
+						<input type="hidden" name="userId" value="${userObj.id}">
 
-	<!-- end of 1st Div -->
+						<!-- Disease / Treatment -->
+						<div class="col-md-6">
+							<label class="form-label text-white-80 fs-7">Select Clinic / Specialty</label>
+							<select required="required" class="form-select bg-transparent text-white border-secondary rounded-pill px-3 fs-7" name="diseases" id="diseaseSelect" onchange="loadStatesByDisease()">
+								<option selected="selected" disabled="disabled" class="text-dark">---Loading...---</option>
+							</select>
+						</div>
 
+						<!-- State -->
+						<div class="col-md-6">
+							<label class="form-label text-white-80 fs-7">Select State</label>
+							<select required="required" class="form-select bg-transparent text-white border-secondary rounded-pill px-3 fs-7" name="stateSelect" id="stateSelect" onchange="loadCitiesByState()">
+								<option selected="selected" disabled="disabled" class="text-dark">---Select Specialty First---</option>
+							</select>
+						</div>
 
-	<!-- 2nd Div -->
+						<!-- City -->
+						<div class="col-md-6">
+							<label class="form-label text-white-80 fs-7">Select Location / City</label>
+							<select required="required" class="form-select bg-transparent text-white border-secondary rounded-pill px-3 fs-7" name="citySelect" id="citySelect" onchange="loadHospitalsByCity()">
+								<option selected="selected" disabled="disabled" class="text-dark">---Select State First---</option>
+							</select>
+						</div>
 
-	<div class="container p-3">
-		<p class="fs-2"></p>
+						<!-- Hospital -->
+						<div class="col-md-6">
+							<label class="form-label text-white-80 fs-7">Select Hospital</label>
+							<select required="required" class="form-select bg-transparent text-white border-secondary rounded-pill px-3 fs-7" name="hospitalSelect" id="hospitalSelect" onchange="loadDoctorsByHospital()">
+								<option selected="selected" disabled="disabled" class="text-dark">---Select City First---</option>
+							</select>
+						</div>
 
-		<div class="row">
-			
-			<!-- col-1 -->
-			<div class="col-md-6 p-5">
-				<!-- for Background image -->
-				<!-- <img alt="" src="img/picDoc.jpg" width="500px" height="400px"> -->
-				<img alt="" src="img/doc3.jpg" width="370" height="">
-			</div>
-			
-			<!-- col-2 -->
-			<div class="col-md-6">
-				<div class="card my-card">
-					<div class="card-body">
-						<p class="text-center fs-3">User Appointment</p>
+						<!-- Full Name -->
+						<div class="col-md-6">
+							<label class="form-label text-white-80 fs-7">Enter Your Name</label>
+							<input required="required" name="fullName" type="text" placeholder="Enter Your Name" value="${userObj.fullName}" class="form-control bg-transparent text-white border-secondary rounded-pill px-3 fs-7">
+						</div>
 
-						<!-- message print -->
-						<!-- for success msg -->
-						<c:if test="${not empty successMsg }">
-							<p class="text-center text-success fs-5">${successMsg}</p>
-							<c:remove var="successMsg" scope="session" />
-						</c:if>
+						<!-- Email -->
+						<div class="col-md-6">
+							<label class="form-label text-white-80 fs-7">Enter Your Email</label>
+							<input required="required" name="email" type="email" placeholder="Enter Your Email" value="${userObj.email}" class="form-control bg-transparent text-white border-secondary rounded-pill px-3 fs-7">
+						</div>
 
-						<!-- for error msg -->
-						<c:if test="${not empty errorMsg }">
-							<p class="text-center text-danger fs-5">${errorMsg}</p>
-							<c:remove var="errorMsg" scope="session" />
-						</c:if>
-						<!-- End of message print -->
+						<!-- Phone -->
+						<div class="col-md-6">
+							<label class="form-label text-white-80 fs-7">Enter Your Phone No.</label>
+							<input required="required" name="phone" type="text" maxlength="15" placeholder="Enter Your Phone No." class="form-control bg-transparent text-white border-secondary rounded-pill px-3 fs-7">
+						</div>
 
+						<!-- Date Picker -->
+						<div class="col-md-6">
+							<label class="form-label text-white-80 fs-7">Select Date</label>
+							<input required="required" name="appointmentDate" id="appointmentDate" type="date" class="form-control bg-transparent text-white border-secondary rounded-pill px-3 fs-7" onchange="loadDoctorsByHospital()">
+						</div>
 
-						<!-- boostrap form -->
-						<form class="row g-3" action="addAppointment" method="post">
-							
-							<!-- take user Id in hidden field -->
-							<input type="hidden" name="userId" value="${ userObj.id }">
-							
-							<div class="col-md-6">
-								<label class="form-label">Full Name</label> <input required="required"
-									name="fullName" type="text" placeholder="Enter full name"
-									class="form-control">
+						<!-- Doctor Select -->
+						<div class="col-md-6">
+							<label class="form-label text-white-80 fs-7">Select Doctor</label>
+							<select required="required" class="form-select bg-transparent text-white border-secondary rounded-pill px-3 fs-7" name="doctorNameSelect" id="doctorSelect">
+								<option selected="selected" disabled="disabled" class="text-dark">---Select Hospital First---</option>
+							</select>
+						</div>
 
-							</div>
+						<!-- Gender -->
+						<div class="col-md-3">
+							<label class="form-label text-white-80 fs-7">Gender</label>
+							<select class="form-select bg-transparent text-white border-secondary rounded-pill px-3 fs-7" name="gender" required="required">
+								<option value="male" class="text-dark">Male</option>
+								<option value="female" class="text-dark">Female</option>
+							</select>
+						</div>
 
-							<div class="col-md-6">
-								<label class="form-label">Gender</label> <select
-									class="form-control" name="gender" required="required">
-									<option selected="selected" disabled="disabled">---Select
-										Gender---</option>
-									<option value="male">Male</option>
-									<option value="female">Female</option>
-								</select>
-							</div>
+						<!-- Age -->
+						<div class="col-md-3">
+							<label class="form-label text-white-80 fs-7">Age</label>
+							<input name="age" required="required" type="number" min="1" max="120" placeholder="Age" class="form-control bg-transparent text-white border-secondary rounded-pill px-3 fs-7">
+						</div>
 
-							<div class="col-md-6">
-								<label class="form-label">Age</label> <input name="age"
-								required="required"	type="number" placeholder="Enter your Age" class="form-control">
-							</div>
-							<div class="col-md-6">
-								<label class="form-label">Appointment Date</label> <input
-								required="required"	name="appointmentDate" type="date" class="form-control">
-							</div>
+						<!-- Address -->
+						<div class="col-12">
+							<label class="form-label text-white-80 fs-7">Full Address</label>
+							<textarea name="address" required="required" class="form-control bg-transparent text-white border-secondary rounded-4 px-3 fs-7" rows="2" placeholder="Enter your full address"></textarea>
+						</div>
 
-							<div class="col-md-6">
-								<label class="form-label">Email</label> <input name="email"
-								required="required"	type="email" placeholder="Enter email" class="form-control">
-							</div>
-
-							<div class="col-md-6">
-								<label class="form-label">Phone</label> <input name="phone"
-								required="required"	type="number" maxlength="11" placeholder="Enter Mobile no."
-									class="form-control">
-							</div>
-
-							<div class="col-md-6">
-								<label class="form-label">Diseases</label> <input
-								required="required"	name="diseases" type="text" placeholder="Enter diseases"
-									class="form-control">
-							</div>
-
-							<div class="col-md-6">
-								<label class="form-label">Hospital</label> <select
-								 required="required" class="form-control" name="hospitalSelect" id="hospitalSelect" onchange="loadDoctorsByHospital()">
-									<option selected="selected" disabled="disabled">---Select Hospital---</option>
-									
-									<%
-									HospitalDAO hospDAO = new HospitalDAO(DBConnection.getConn());
-									List<Hospital> hospitalList = hospDAO.getAllHospital();
-									String preSelectedHospitalId = request.getParameter("hospitalId");
-									for(Hospital h : hospitalList)
-									{
-										String selected = "";
-										if(preSelectedHospitalId != null && preSelectedHospitalId.equals(String.valueOf(h.getId()))) {
-											selected = "selected";
-										}
-									%>
-									<option value="<%= h.getId() %>" <%= selected %>><%= h.getName() %> (<%= h.getCity() %>)</option>
-									<%
-									}
-									%>
-								</select>
-							</div>
-
-							<div class="col-md-6">
-								<label class="form-label">Doctor</label> <select
-								 required="required" class="form-control" name="doctorNameSelect" id="doctorSelect">
-									<option selected="selected" disabled="disabled">---Select Hospital First---</option>
-								</select>
-							</div>
-
-
-							<!-- below are visible to right side part of form-->
-
-							<div class="col-md-12">
-								<label class="form-label">Full Address</label>
-								<textarea name="address" required="required" class="form-control" rows="3" cols=""></textarea>
-							</div>
-
-
-							<c:if test="${empty userObj}">
-								<div class="col-md-12">
-									<a href="user_login.jsp" class="btn my-bg-color text-white col-md-12">Submit</a>
-								</div>
-							</c:if>
-
-
-							<c:if test="${not empty userObj}">
-
-								<div class="col-md-12">
-									<button type="submit" class="btn my-bg-color text-white col-md-12">Submit</button>
-								</div>
-
-							</c:if>
-
-						</form>
-
-						<!-- end of boostrap form -->
-
-					</div>
+						<!-- Submit Button -->
+						<div class="col-12 mt-4">
+							<button type="submit" class="btn btn-outline-coral w-100 py-3 text-coral border-coral rounded-pill fw-bold hover-coral-bg text-white">
+								Make Appointment <i class="fa-solid fa-arrow-right ms-2"></i>
+							</button>
+						</div>
+					</form>
 				</div>
 
+				<!-- Right Column: Quick Contacts Sidebar (Coral #f48c71) -->
+				<div class="col-lg-4 p-4 p-md-5 text-white d-flex flex-column justify-content-center" style="background-color: var(--medipro-coral);">
+					<h3 class="fw-bold mb-3">Quick Contacts</h3>
+					<p class="text-white-80 fs-7 mb-4">
+						Have any questions or need to schedule an appointment? Reach out to us quickly!
+					</p>
+
+					<div class="d-flex flex-column gap-3 fs-7">
+						<div class="d-flex align-items-center gap-3">
+							<i class="fa-solid fa-location-dot fs-5"></i>
+							<span>Jl. Raya Kuta No.70, Kuta</span>
+						</div>
+						<div class="d-flex align-items-center gap-3">
+							<i class="fa-regular fa-envelope fs-5"></i>
+							<span>healthcare@gmail.com</span>
+						</div>
+						<div class="d-flex align-items-center gap-3">
+							<i class="fa-solid fa-phone fs-5"></i>
+							<span>808 707 6060</span>
+						</div>
+						<div class="d-flex align-items-center gap-3">
+							<i class="fa-regular fa-clock fs-5"></i>
+							<span>8 AM - 5 PM , Monday - Saturday</span>
+						</div>
+					</div>
+				</div>
 			</div>
-
-
-
 		</div>
-
-
-	</div>
-
-	<!-- 2nd Div -->
+	</section>
 
 
 
@@ -224,20 +238,171 @@
 <%@include file="component/footer.jsp" %>
 <!-- end footer -->
 
+<!-- Hidden inputs for pre-selected hospital values to prevent IDE scriptlet syntax errors -->
+<input type="hidden" id="preHospIdInput" value="<%= preSelectedHospitalId != null ? preSelectedHospitalId : "" %>">
+<input type="hidden" id="preStateInput" value="<%= selectedState %>">
+<input type="hidden" id="preCityInput" value="<%= selectedCity %>">
+<input type="hidden" id="preHospNameInput" value="<%= preSelectedHospital != null ? preSelectedHospital.getName() : "" %>">
+
 <!-- AJAX JavaScript for doctor filtering -->
 <script type="text/javascript">
-	function loadDoctorsByHospital() {
-		var hospitalId = document.getElementById("hospitalSelect").value;
+	var preHospId = document.getElementById("preHospIdInput") ? document.getElementById("preHospIdInput").value : "";
+	var preState = document.getElementById("preStateInput") ? document.getElementById("preStateInput").value : "";
+	var preCity = document.getElementById("preCityInput") ? document.getElementById("preCityInput").value : "";
+	var preHospName = document.getElementById("preHospNameInput") ? document.getElementById("preHospNameInput").value : "";
+
+	function loadDiseases() {
+		var diseaseSelect = document.getElementById("diseaseSelect");
+		var xhr = new XMLHttpRequest();
+		xhr.open("GET", "getAllDiseases", true);
+		xhr.onreadystatechange = function() {
+			if (xhr.readyState === 4 && xhr.status === 200) {
+				var diseases = JSON.parse(xhr.responseText);
+				diseaseSelect.innerHTML = '<option value="" selected="selected" disabled="disabled">---Select Disease / Treatment---</option>';
+				for (var i = 0; i < diseases.length; i++) {
+					var option = document.createElement("option");
+					option.value = diseases[i];
+					option.text = diseases[i];
+					diseaseSelect.appendChild(option);
+				}
+
+				if (preHospId && preState) {
+					// Select first available disease as fallback
+					if (diseases.length > 0) {
+						diseaseSelect.value = diseases[0];
+						loadStatesByDisease(true);
+					}
+				}
+			}
+		};
+		xhr.send();
+	}
+
+	function loadStatesByDisease(isPreSelect) {
+		var disease = document.getElementById("diseaseSelect").value;
+		var stateSelect = document.getElementById("stateSelect");
+		var citySelect = document.getElementById("citySelect");
+		var hospitalSelect = document.getElementById("hospitalSelect");
 		var doctorSelect = document.getElementById("doctorSelect");
 
-		doctorSelect.innerHTML = '<option selected="selected" disabled="disabled">---Loading...---</option>';
+		if (!disease || disease.startsWith("---")) return;
+
+		stateSelect.innerHTML = '<option value="" selected="selected" disabled="disabled">---Loading...---</option>';
+		citySelect.innerHTML = '<option value="" selected="selected" disabled="disabled">---Select State First---</option>';
+		hospitalSelect.innerHTML = '<option value="" selected="selected" disabled="disabled">---Select City First---</option>';
+		doctorSelect.innerHTML = '<option value="" selected="selected" disabled="disabled">---Select Hospital First---</option>';
 
 		var xhr = new XMLHttpRequest();
-		xhr.open("GET", "getDoctorsByHospital?hospitalId=" + hospitalId, true);
+		xhr.open("GET", "getStatesByDisease?disease=" + encodeURIComponent(disease), true);
+		xhr.onreadystatechange = function() {
+			if (xhr.readyState === 4 && xhr.status === 200) {
+				var states = JSON.parse(xhr.responseText);
+				stateSelect.innerHTML = '<option value="" selected="selected" disabled="disabled">---Select State---</option>';
+				for (var i = 0; i < states.length; i++) {
+					var option = document.createElement("option");
+					option.value = states[i];
+					option.text = states[i];
+					stateSelect.appendChild(option);
+				}
+
+				if (isPreSelect && preState && states.includes(preState)) {
+					stateSelect.value = preState;
+					loadCitiesByState(true);
+				}
+			}
+		};
+		xhr.send();
+	}
+
+	function loadCitiesByState(isPreSelect) {
+		var state = document.getElementById("stateSelect").value;
+		var disease = document.getElementById("diseaseSelect").value;
+		var citySelect = document.getElementById("citySelect");
+		var hospitalSelect = document.getElementById("hospitalSelect");
+		var doctorSelect = document.getElementById("doctorSelect");
+
+		if (!state || state.startsWith("---")) return;
+
+		citySelect.innerHTML = '<option value="" selected="selected" disabled="disabled">---Loading...---</option>';
+		hospitalSelect.innerHTML = '<option value="" selected="selected" disabled="disabled">---Select City First---</option>';
+		doctorSelect.innerHTML = '<option value="" selected="selected" disabled="disabled">---Select Hospital First---</option>';
+
+		var xhr = new XMLHttpRequest();
+		xhr.open("GET", "getCitiesByState?state=" + encodeURIComponent(state) + "&disease=" + encodeURIComponent(disease), true);
+		xhr.onreadystatechange = function() {
+			if (xhr.readyState === 4 && xhr.status === 200) {
+				var cities = JSON.parse(xhr.responseText);
+				citySelect.innerHTML = '<option value="" selected="selected" disabled="disabled">---Select City---</option>';
+				for (var i = 0; i < cities.length; i++) {
+					var option = document.createElement("option");
+					option.value = cities[i];
+					option.text = cities[i];
+					citySelect.appendChild(option);
+				}
+
+				if (isPreSelect && preCity && cities.includes(preCity)) {
+					citySelect.value = preCity;
+					loadHospitalsByCity(true);
+				}
+			}
+		};
+		xhr.send();
+	}
+
+	function loadHospitalsByCity(isPreSelect) {
+		var city = document.getElementById("citySelect").value;
+		var disease = document.getElementById("diseaseSelect").value;
+		var hospitalSelect = document.getElementById("hospitalSelect");
+		var doctorSelect = document.getElementById("doctorSelect");
+
+		if (!city || city.startsWith("---")) return;
+
+		hospitalSelect.innerHTML = '<option value="" selected="selected" disabled="disabled">---Loading...---</option>';
+		doctorSelect.innerHTML = '<option value="" selected="selected" disabled="disabled">---Select Hospital First---</option>';
+
+		var xhr = new XMLHttpRequest();
+		xhr.open("GET", "getHospitalsByCity?city=" + encodeURIComponent(city) + "&disease=" + encodeURIComponent(disease), true);
+		xhr.onreadystatechange = function() {
+			if (xhr.readyState === 4 && xhr.status === 200) {
+				var hospitals = JSON.parse(xhr.responseText);
+				hospitalSelect.innerHTML = '<option value="" selected="selected" disabled="disabled">---Select Hospital---</option>';
+				for (var i = 0; i < hospitals.length; i++) {
+					var option = document.createElement("option");
+					option.value = hospitals[i].id;
+					option.text = hospitals[i].name;
+					hospitalSelect.appendChild(option);
+				}
+
+				if (isPreSelect && preHospId) {
+					hospitalSelect.value = preHospId;
+					loadDoctorsByHospital();
+				}
+			}
+		};
+		xhr.send();
+	}
+
+	function loadDoctorsByHospital() {
+		var hospitalId = document.getElementById("hospitalSelect").value;
+		var disease = document.getElementById("diseaseSelect").value;
+		var doctorSelect = document.getElementById("doctorSelect");
+		var appointmentDateInput = document.getElementById("appointmentDate");
+		var appointmentDate = appointmentDateInput ? appointmentDateInput.value : "";
+
+		if (!hospitalId || isNaN(parseInt(hospitalId))) {
+			doctorSelect.innerHTML = '<option value="" selected="selected" disabled="disabled">---Select Hospital First---</option>';
+			return;
+		}
+
+		doctorSelect.innerHTML = '<option value="" selected="selected" disabled="disabled">---Loading...---</option>';
+
+		var xhr = new XMLHttpRequest();
+		var url = "getDoctorsByHospital?hospitalId=" + hospitalId + "&disease=" + encodeURIComponent(disease || "") + "&date=" + encodeURIComponent(appointmentDate);
+		xhr.open("GET", url, true);
 		xhr.onreadystatechange = function() {
 			if (xhr.readyState === 4 && xhr.status === 200) {
 				var doctors = JSON.parse(xhr.responseText);
-				doctorSelect.innerHTML = '<option selected="selected" disabled="disabled">---Select Doctor---</option>';
+				doctorSelect.innerHTML = '<option value="" selected="selected" disabled="disabled">---Select Doctor---</option>';
 				for (var i = 0; i < doctors.length; i++) {
 					var option = document.createElement("option");
 					option.value = doctors[i].id;
@@ -245,21 +410,26 @@
 					doctorSelect.appendChild(option);
 				}
 				if (doctors.length === 0) {
-					doctorSelect.innerHTML = '<option selected="selected" disabled="disabled">---No Doctors Found---</option>';
+					doctorSelect.innerHTML = '<option value="" selected="selected" disabled="disabled">---No Available Doctors Found---</option>';
 				}
 			}
 		};
 		xhr.send();
 	}
 
-	// Auto-load doctors if hospital is pre-selected (from find_hospitals.jsp)
 	window.onload = function() {
-		var hospitalSelect = document.getElementById("hospitalSelect");
-		if (hospitalSelect && hospitalSelect.value && hospitalSelect.value !== "---Select Hospital---") {
-			loadDoctorsByHospital();
+		var todayStr = new Date().toISOString().split('T')[0];
+		var dateInput = document.getElementById("appointmentDate");
+		if (dateInput) {
+			dateInput.min = todayStr;
+			if (!dateInput.value) {
+				dateInput.value = todayStr;
+			}
 		}
+		loadDiseases();
 	};
 </script>
+
 
 <c:if test="${not empty lastTokenNo}">
 	<!-- Bootstrap Modal -->
@@ -293,7 +463,7 @@
 					<p class="mb-0 text-muted" style="font-size: 0.85rem;">Please arrive 10 minutes prior to your time slot.</p>
 				</div>
 				<div class="modal-footer" style="border-top: none; justify-content: center; padding: 0 24px 24px 24px;">
-					<button type="button" class="btn btn-primary px-4" data-bs-dismiss="modal">Great, Thank you!</button>
+					<button type="button" class="btn-uiverse px-4" data-bs-dismiss="modal">Great, Thank you!</button>
 				</div>
 			</div>
 		</div>

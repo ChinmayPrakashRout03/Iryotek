@@ -1,6 +1,8 @@
 <%@page import="java.util.List"%>
 <%@page import="com.hms.db.DBConnection"%>
 <%@page import="com.hms.dao.HospitalDAO"%>
+<%@page import="com.hms.dao.SpecialistDAO"%>
+<%@page import="com.hms.entity.Specialist"%>
 <%@ page language="java" contentType="text/html; charset=UTF-8"
 	pageEncoding="UTF-8"%>
 
@@ -60,23 +62,85 @@
 <body>
 	<%@include file="component/navbar.jsp"%>
 
-	<!-- Hero Section -->
-	<div class="container-fluid my-bg-img p-5">
-		<p class="text-center fs-2 text-white fw-bold mt-3">
-			<i class="fa-solid fa-hospital"></i> Find Hospitals Near You
-		</p>
-	</div>
+	<!-- Page Breadcrumb Header Banner (Dark Green #0b3c36) -->
+	<section class="medipro-page-header text-center py-5 text-white" style="background-color: var(--medipro-dark-green);">
+		<div class="container py-4">
+			<h1 class="display-4 fw-extrabold text-coral mb-2">Services</h1>
+			<p class="fs-6 text-white-50">Home &raquo; Services</p>
+		</div>
+	</section>
 
-	<!-- Filter Section -->
-	<div class="container mt-4">
-		<div class="filter-section">
-			<p class="fs-4 text-center myP-color mb-3">
-				<i class="fa-solid fa-filter"></i> Select Your Location
+	<!-- Section 1: 6 Dark Green Specialty Cards Grid -->
+	<section class="py-5" style="background-color: var(--medipro-cream-bg);">
+		<div class="container py-4">
+			<div class="text-coral fw-bold fs-7 tracking-wider uppercase mb-2">OUR SERVICES</div>
+			<h2 class="faq-main-heading mb-5">Providing Medical Care For The Sickest In Our Community.</h2>
+
+			<div class="row g-4">
+				<!-- Card 1 -->
+				<div class="col-lg-4 col-md-6">
+					<div class="p-4 rounded-4 text-white shadow-lg h-100 d-flex flex-column justify-content-between" style="background-color: var(--medipro-dark-card);">
+						<div>
+							<div class="fs-1 text-coral mb-3"><i class="fa-solid fa-heart-pulse"></i></div>
+							<h4 class="fw-bold mb-2">Cardiology Clinic</h4>
+							<p class="fs-7 text-white-50 mb-3">Expert consultations with board-certified cardiologists to assess heart health.</p>
+							<ul class="list-unstyled text-white-80 fs-7 d-flex flex-column gap-2 mb-4">
+								<li><i class="fa-solid fa-circle-check text-coral me-2"></i> Cardiac Electrophysiology</li>
+								<li><i class="fa-solid fa-circle-check text-coral me-2"></i> Cardiac Catheterization</li>
+								<li><i class="fa-solid fa-circle-check text-coral me-2"></i> Arrhythmia Management</li>
+							</ul>
+						</div>
+						<a href="service_detail.jsp" class="btn btn-outline-coral text-coral border-coral rounded-pill w-100 py-2 fs-7 fw-bold hover-coral-bg text-white">Read More (+)</a>
+					</div>
+				</div>
+
+				<!-- Card 2 -->
+				<div class="col-lg-4 col-md-6">
+					<div class="p-4 rounded-4 text-white shadow-lg h-100 d-flex flex-column justify-content-between" style="background-color: var(--medipro-dark-card);">
+						<div>
+							<div class="fs-1 text-coral mb-3"><i class="fa-solid fa-microscope"></i></div>
+							<h4 class="fw-bold mb-2">Pathology Clinic</h4>
+							<p class="fs-7 text-white-50 mb-3">Comprehensive tests to analyze body fluids aiding in precise diagnosis.</p>
+							<ul class="list-unstyled text-white-80 fs-7 d-flex flex-column gap-2 mb-4">
+								<li><i class="fa-solid fa-circle-check text-coral me-2"></i> Molecular Pathology</li>
+								<li><i class="fa-solid fa-circle-check text-coral me-2"></i> Cytogenetics</li>
+								<li><i class="fa-solid fa-circle-check text-coral me-2"></i> Immunology</li>
+							</ul>
+						</div>
+						<a href="service_detail.jsp" class="btn btn-outline-coral text-coral border-coral rounded-pill w-100 py-2 fs-7 fw-bold hover-coral-bg text-white">Read More (+)</a>
+					</div>
+				</div>
+
+				<!-- Card 3 -->
+				<div class="col-lg-4 col-md-6">
+					<div class="p-4 rounded-4 text-white shadow-lg h-100 d-flex flex-column justify-content-between" style="background-color: var(--medipro-dark-card);">
+						<div>
+							<div class="fs-1 text-coral mb-3"><i class="fa-solid fa-vial-circle-check"></i></div>
+							<h4 class="fw-bold mb-2">Laboratory Analysis</h4>
+							<p class="fs-7 text-white-50 mb-3">Advanced menu of lab testing for blood, tissue, and clinical microbiology.</p>
+							<ul class="list-unstyled text-white-80 fs-7 d-flex flex-column gap-2 mb-4">
+								<li><i class="fa-solid fa-circle-check text-coral me-2"></i> Comprehensive Test Menu</li>
+								<li><i class="fa-solid fa-circle-check text-coral me-2"></i> Timely Turnaround</li>
+								<li><i class="fa-solid fa-circle-check text-coral me-2"></i> Advanced Diagnostic Tests</li>
+							</ul>
+						</div>
+						<a href="service_detail.jsp" class="btn btn-outline-coral text-coral border-coral rounded-pill w-100 py-2 fs-7 fw-bold hover-coral-bg text-white">Read More (+)</a>
+					</div>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<!-- Filter & Hospital Search Section -->
+	<div class="container my-5">
+		<div class="filter-section p-4 rounded-4 bg-white shadow-sm border border-light">
+			<p class="fs-4 text-center text-dark fw-bold mb-3">
+				<i class="fa-solid fa-filter text-coral me-2"></i> Find Doctors & Hospitals Near You
 			</p>
 			<div class="row justify-content-center">
 				<div class="col-md-4">
-					<label class="form-label fw-bold">State</label>
-					<select class="form-control" id="stateSelect" onchange="loadCities()">
+					<label class="form-label fw-bold fs-7">State</label>
+					<select class="form-select rounded-pill px-3 fs-7" id="stateSelect" onchange="loadCities()">
 						<option selected="selected" disabled="disabled">---Select State---</option>
 						<%
 						HospitalDAO hospDAO = new HospitalDAO(DBConnection.getConn());
@@ -90,20 +154,32 @@
 					</select>
 				</div>
 				<div class="col-md-4">
-					<label class="form-label fw-bold">City</label>
-					<select class="form-control" id="citySelect" onchange="loadHospitals()" disabled="disabled">
+					<label class="form-label fw-bold fs-7">City</label>
+					<select class="form-select rounded-pill px-3 fs-7" id="citySelect" onchange="searchDoctors()" disabled="disabled">
 						<option selected="selected" disabled="disabled">---Select City---</option>
+					</select>
+				</div>
+				<div class="col-md-4">
+					<label class="form-label fw-bold fs-7">Specialty</label>
+					<select class="form-select rounded-pill px-3 fs-7" id="specialtySelect" onchange="searchDoctors()">
+						<option value="ALL" selected="selected">All Specialties</option>
+						<%
+						SpecialistDAO specDAO = new SpecialistDAO(DBConnection.getConn());
+						List<Specialist> specs = specDAO.getAllSpecialist();
+						for (Specialist sp : specs) {
+						%>
+						<option value="<%=sp.getSpecialistName()%>"><%=sp.getSpecialistName()%></option>
+						<%
+						}
+						%>
 					</select>
 				</div>
 			</div>
 		</div>
-	</div>
 
-	<!-- Hospital Results Section -->
-	<div class="container mt-4 mb-5">
-		<div id="hospitalResults">
-			<p class="text-center no-results mt-5">
-				<i class="fa-solid fa-arrow-up"></i> Please select a State and City to find hospitals
+		<div id="hospitalResults" class="mt-4">
+			<p class="text-center no-results my-4 text-muted">
+				<i class="fa-solid fa-arrow-up text-coral me-1"></i> Select a State and City above to view available doctors & hospitals
 			</p>
 		</div>
 	</div>
@@ -145,39 +221,49 @@
 			xhr.send();
 		}
 
-		// Load hospitals when city is selected
-		function loadHospitals() {
+		// Search doctors
+		function searchDoctors() {
+			var state = document.getElementById("stateSelect").value;
 			var city = document.getElementById("citySelect").value;
+			var specialty = document.getElementById("specialtySelect").value;
 			var resultsDiv = document.getElementById("hospitalResults");
 
-			resultsDiv.innerHTML = '<p class="text-center mt-5"><i class="fa-solid fa-spinner fa-spin"></i> Loading hospitals...</p>';
+			// Only search if city is selected (it's required)
+			if (!city || city === "---Select City---") {
+				return;
+			}
 
-			// AJAX call to get hospitals
+			resultsDiv.innerHTML = '<p class="text-center mt-5"><i class="fa-solid fa-spinner fa-spin"></i> Searching Doctors...</p>';
+
 			var xhr = new XMLHttpRequest();
-			xhr.open("GET", "getHospitalsByCity?city=" + encodeURIComponent(city), true);
+			xhr.open("GET", "searchDoctors?state=" + encodeURIComponent(state) + "&city=" + encodeURIComponent(city) + "&specialty=" + encodeURIComponent(specialty), true);
 			xhr.onreadystatechange = function() {
 				if (xhr.readyState === 4 && xhr.status === 200) {
-					var hospitals = JSON.parse(xhr.responseText);
+					var doctors = JSON.parse(xhr.responseText);
 
-					if (hospitals.length === 0) {
-						resultsDiv.innerHTML = '<p class="text-center no-results mt-5"><i class="fa-solid fa-circle-exclamation"></i> No hospitals found in ' + city + '</p>';
+					var displaySpec = specialty === "ALL" ? "All" : specialty;
+
+					if (doctors.length === 0) {
+						resultsDiv.innerHTML = '<p class="text-center no-results mt-5"><i class="fa-solid fa-circle-exclamation"></i> No ' + displaySpec + ' doctors found in ' + city + '</p>';
 						return;
 					}
 
-					var html = '<p class="fs-4 myP-color mb-3"><i class="fa-solid fa-hospital"></i> Hospitals in ' + city + ' (' + hospitals.length + ' found)</p>';
+					var html = '<p class="fs-4 myP-color mb-3"><i class="fa-solid fa-user-doctor"></i> ' + displaySpec + ' Doctors in ' + city + ' (' + doctors.length + ' found)</p>';
 					html += '<div class="row">';
 
-					for (var i = 0; i < hospitals.length; i++) {
-						var h = hospitals[i];
+					for (var i = 0; i < doctors.length; i++) {
+						var d = doctors[i];
 						html += '<div class="col-md-6 mb-3">';
 						html += '  <div class="card hospital-card h-100">';
 						html += '    <div class="card-body">';
-						html += '      <h5 class="card-title myP-color"><i class="fa-solid fa-hospital"></i> ' + h.name + '</h5>';
-						html += '      <p class="card-text mb-1"><i class="fa-solid fa-location-dot text-danger"></i> ' + h.address + '</p>';
-						html += '      <p class="card-text mb-1"><i class="fa-solid fa-city text-primary"></i> ' + h.city + ', ' + h.state + '</p>';
-						html += '      <p class="card-text mb-2"><i class="fa-solid fa-phone text-success"></i> ' + h.phone + '</p>';
-						html += '      <a href="user_appointment.jsp?hospitalId=' + h.id + '" class="btn btn-sm btn-primary">'; 
-						html += '        <i class="fa-solid fa-user-doctor"></i> View Doctors & Book';
+						html += '      <h4 class="card-title myP-color"><i class="fa-solid fa-user-md"></i> ' + d.fullName + '</h4>';
+						html += '      <p class="card-text mb-1"><strong>Qualification:</strong> ' + d.qualification + '</p>';
+						html += '      <p class="card-text mb-1"><strong>Specialty:</strong> ' + d.specialist + '</p>';
+						html += '      <hr>';
+						html += '      <p class="card-text mb-1"><i class="fa-solid fa-hospital text-primary"></i> ' + d.hospitalName + '</p>';
+						html += '      <p class="card-text mb-1"><i class="fa-solid fa-location-dot text-danger"></i> ' + d.hospitalAddress + ', ' + d.city + ', ' + d.state + '</p>';
+						html += '      <a href="user_appointment.jsp?hospitalId=' + d.hospitalId + '" class="btn-uiverse mt-3">'; 
+						html += '        <i class="fa-solid fa-calendar-check"></i> Book Appointment';
 						html += '      </a>';
 						html += '    </div>';
 						html += '  </div>';

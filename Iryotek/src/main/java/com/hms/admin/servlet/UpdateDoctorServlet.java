@@ -30,12 +30,13 @@ public class UpdateDoctorServlet extends HttpServlet {
 			String phone = req.getParameter("phone");
 			String password = req.getParameter("password");
 			int hospitalId = Integer.parseInt(req.getParameter("hospitalId"));
+			String diseases = req.getParameter("diseases");
 			
 			//here need to get id also...for updating the doctor details
 			//doctors will update based on respective doctor's id
 			int id = Integer.parseInt(req.getParameter("id"));
 
-			Doctor doctor = new Doctor(id, fullName, dateOfBirth, qualification, specialist, email, phone, password);
+			Doctor doctor = new Doctor(id, fullName, dateOfBirth, qualification, specialist, diseases, email, phone, password, hospitalId, "09:00 AM - 05:00 PM");
 			doctor.setHospitalId(hospitalId);
 
 			DoctorDAO docDAO = new DoctorDAO(DBConnection.getConn());

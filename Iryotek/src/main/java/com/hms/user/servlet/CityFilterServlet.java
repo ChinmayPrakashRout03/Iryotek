@@ -25,9 +25,15 @@ public class CityFilterServlet extends HttpServlet {
 
 		try {
 			String state = req.getParameter("state");
+			String disease = req.getParameter("disease");
 
 			HospitalDAO hospitalDAO = new HospitalDAO(DBConnection.getConn());
-			List<String> cityList = hospitalDAO.getCitiesByState(state);
+			List<String> cityList;
+			if (disease != null && !disease.trim().isEmpty()) {
+				cityList = hospitalDAO.getCitiesByStateAndDisease(state, disease);
+			} else {
+				cityList = hospitalDAO.getCitiesByState(state);
+			}
 
 			// Build JSON array of strings
 			StringBuilder json = new StringBuilder("[");

@@ -76,7 +76,7 @@
 									class="form-control">
 							</div>
 
-							<button type="submit" class="btn btn-danger text-white col-md-12">Add Hospital</button>
+							<button type="submit" class="btn-uiverse col-md-12">Add Hospital</button>
 						</form>
 						<!-- end of bootstrap form -->
 

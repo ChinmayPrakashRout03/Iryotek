@@ -81,7 +81,7 @@
 							</div>
 							<input type="hidden" value="${doctorObj.id}" name="doctorId">
 
-							<button type="submit" class="btn btn-success col-md-12">Change
+							<button type="submit" class="btn-uiverse col-md-12">Change
 								Password</button>
 						</form>
 						<!-- doctor change password form -->
@@ -174,7 +174,7 @@
 
 
 								<button type="submit"
-									class="btn btn-success text-white col-md-12">Update</button>
+									class="btn-uiverse col-md-12">Update</button>
 							</form>
 						
 					</div>

@@ -223,4 +223,65 @@ public class HospitalDAO {
 		return i;
 	}
 
+	// get all distinct states by disease
+	public List<String> getStatesByDisease(String disease) {
+		List<String> stateList = new ArrayList<String>();
+		try {
+			String sql = "select distinct h.state from hospital h inner join doctor d on h.id = d.hospitalId where d.diseases = ? order by h.state";
+			PreparedStatement pstmt = this.conn.prepareStatement(sql);
+			pstmt.setString(1, disease);
+			ResultSet resultSet = pstmt.executeQuery();
+			while (resultSet.next()) {
+				stateList.add(resultSet.getString("state"));
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return stateList;
+	}
+
+	// get cities by state and disease
+	public List<String> getCitiesByStateAndDisease(String state, String disease) {
+		List<String> cityList = new ArrayList<String>();
+		try {
+			String sql = "select distinct h.city from hospital h inner join doctor d on h.id = d.hospitalId where h.state = ? and d.diseases = ? order by h.city";
+			PreparedStatement pstmt = this.conn.prepareStatement(sql);
+			pstmt.setString(1, state);
+			pstmt.setString(2, disease);
+			ResultSet resultSet = pstmt.executeQuery();
+			while (resultSet.next()) {
+				cityList.add(resultSet.getString("city"));
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return cityList;
+	}
+
+	// get hospitals by city and disease
+	public List<Hospital> getHospitalsByCityAndDisease(String city, String disease) {
+		List<Hospital> hospitalList = new ArrayList<Hospital>();
+		Hospital hospital = null;
+		try {
+			String sql = "select distinct h.* from hospital h inner join doctor d on h.id = d.hospitalId where h.city = ? and d.diseases = ? order by h.name";
+			PreparedStatement pstmt = this.conn.prepareStatement(sql);
+			pstmt.setString(1, city);
+			pstmt.setString(2, disease);
+			ResultSet resultSet = pstmt.executeQuery();
+			while (resultSet.next()) {
+				hospital = new Hospital();
+				hospital.setId(resultSet.getInt("id"));
+				hospital.setName(resultSet.getString("name"));
+				hospital.setAddress(resultSet.getString("address"));
+				hospital.setCity(resultSet.getString("city"));
+				hospital.setState(resultSet.getString("state"));
+				hospital.setPhone(resultSet.getString("phone"));
+				hospitalList.add(hospital);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return hospitalList;
+	}
+
 }

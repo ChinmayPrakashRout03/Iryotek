@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fefce8"/>
+      <stop offset="100%" stop-color="#fef08a"/>
+    </linearGradient>
+    <linearGradient id="sach" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#eab308"/>
+      <stop offset="100%" stop-color="#ca8a04"/>
+    </linearGradient>
+  </defs>
+  <rect width="120" height="120" rx="24" fill="url(#bg)"/>
+  <!-- Sachet Pack -->
+  <rect x="36" y="32" width="48" height="62" rx="5" fill="url(#sach)"/>
+  <rect x="36" y="32" width="48" height="8" fill="#a16207"/>
+  <path d="M56,54 L56,76 M45,65 L67,65" stroke="#ffffff" stroke-width="3.5" stroke-linecap="round" opacity="0.9"/>
+  <!-- Granules / Powder Sparkles -->
+  <circle cx="92" cy="44" r="3" fill="#ca8a04"/>
+  <circle cx="98" cy="56" r="2" fill="#eab308"/>
+  <circle cx="90" cy="68" r="2.5" fill="#ca8a04"/>
+</svg>

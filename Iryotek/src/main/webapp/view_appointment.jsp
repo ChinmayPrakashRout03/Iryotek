@@ -15,6 +15,10 @@
 
 <%@page isELIgnored="false"%>
 
+<c:if test="${empty userObj}">
+	<c:redirect url="user_login.jsp" />
+</c:if>
+
 
 <!DOCTYPE html>
 <html>
@@ -28,7 +32,7 @@
 <title>View Appointment Page</title>
 
 <!-- all css include -->
-<%@include file="../component/allcss.jsp"%>
+<%@include file="component/allcss.jsp"%>
 
 <!-- customs css for this page -->
 <style type="text/css">
@@ -56,13 +60,6 @@
 <body>
 	<%@include file="component/navbar.jsp"%>
 
-	<!-- if not login then log in first -->
-	<c:if test="${empty userObj }">
-
-		<c:redirect url="/user_login.jsp"></c:redirect>
-
-	</c:if>
-
 	<!-- start 1st Div -->
 
 	<div class="container-fluid my-bg-img p-5">
@@ -74,129 +71,145 @@
 	<!-- end of 1st Div -->
 
 	<!-- 2nd Div -->
-
-	<div class="container-fluid p-3">
-		<p class="fs-2"></p>
-
+	<div class="container-fluid px-4 py-4">
 		<div class="row">
+			<div class="col-12">
+				<div class="card my-card border-0 shadow-sm" style="border-radius: 16px; overflow: hidden;">
+					<div class="card-header bg-white py-3 border-0">
+						<h3 class="fw-bold myP-color mb-0 text-center">
+							<i class="fa-solid fa-list-check me-2"></i> My Appointments
+						</h3>
+					</div>
+					<div class="card-body p-0">
+						<div class="table-responsive">
+							<table class="table align-middle table-hover text-center mb-0" style="width: 100%; min-width: 1000px;">
+								<thead class="my-bg-color text-white">
+									<tr style="font-size: 0.85rem; letter-spacing: 0.5px; text-transform: uppercase;">
+										<th scope="col" class="py-3 px-3">Full Name</th>
+										<th scope="col" class="py-3 px-2">Gender</th>
+										<th scope="col" class="py-3 px-2">Age</th>
+										<th scope="col" class="py-3 px-3">Date</th>
+										<th scope="col" class="py-3 px-2">Token</th>
+										<th scope="col" class="py-3 px-3">Time Slot</th>
+										<th scope="col" class="py-3 px-3">Phone</th>
+										<th scope="col" class="py-3 px-3">Diseases</th>
+										<th scope="col" class="py-3 px-3">Doctor</th>
+										<th scope="col" class="py-3 px-2">Status</th>
+										<th scope="col" class="py-3 px-3">Live Queue</th>
+									</tr>
+								</thead>
+								<tbody>
+									<%
+									User user = (User) session.getAttribute("userObj");
+									DoctorDAO dDAO = new DoctorDAO(DBConnection.getConn());
+									AppointmentDAO appDAO = new AppointmentDAO(DBConnection.getConn());
+									List<Appointment> list = null;
+									if (user != null) {
+										list = appDAO.getAllAppointmentByLoginUser(user.getId());
+									}
+									if (list != null && !list.isEmpty()) {
+										for (Appointment apptList : list) {
+											Doctor doctor = dDAO.getDoctorById(apptList.getDoctorId());
+											String docName = doctor != null ? doctor.getFullName() : "Unknown";
+									%>
 
+									<tr>
+										<td class="fw-bold text-dark px-3"><%=apptList.getFullName()%></td>
+										<td class="text-capitalize px-2"><%=apptList.getGender()%></td>
+										<td class="px-2"><%=apptList.getAge()%></td>
+										<td class="px-3"><%=apptList.getAppointmentDate()%></td>
+										<td class="px-2">
+											<span class="badge bg-danger rounded-pill px-3 py-2 fs-6 shadow-sm"><%=apptList.getTokenNo()%></span>
+										</td>
+										<td class="px-3"><strong class="myP-color"><%=apptList.getAppointmentTime()%></strong></td>
+										<td class="px-3"><%=apptList.getPhone()%></td>
+										<td class="px-3"><span class="badge bg-light text-dark border px-2 py-1"><%=apptList.getDiseases()%></span></td>
+										<td class="fw-semibold px-3">Dr. <%=docName%></td>
+										<td class="px-2">
+											<%
+											if ("Pending".equals(apptList.getStatus())) {
+											%> 
+												<span class="badge bg-warning text-dark px-3 py-2 rounded-pill"><i class="fa-solid fa-spinner fa-spin me-1"></i> Pending</span> 
+											<%
+											} else {
+											%> 
+												<span class="badge bg-success px-3 py-2 rounded-pill"><i class="fa-solid fa-check me-1"></i> <%=apptList.getStatus()%></span> 
+											<%
+											}
+											%>
+										</td>
+										<td class="px-3">
+											<%
+											if ("Pending".equals(apptList.getStatus())) {
+											%>
+												<span class="badge bg-primary live-queue-tracker text-white rounded-pill px-3 py-2 shadow-sm" 
+													  data-doctor-id="<%=apptList.getDoctorId()%>" 
+													  data-date="<%=apptList.getAppointmentDate()%>" 
+													  data-my-token="<%=apptList.getTokenNo()%>">
+													<i class="fa-solid fa-spinner fa-spin me-1"></i> Connecting...
+												</span>
+											<%
+											} else {
+											%>
+												<span class="text-success fw-bold"><i class="fa-solid fa-circle-check"></i> Completed</span>
+											<%
+											}
+											%>
+										</td>
+									</tr>
 
-
-			<!-- col-2 -->
-			<div class="col-md-9">
-				<div class="card my-card">
-					<div class="card-body">
-						<p class="fw-bold text-center myP-color fs-4">Appointment
-							List</p>
-
-						<%-- <!-- message print -->
-						<!-- for success msg -->
-						<c:if test="${not empty successMsg }">
-							<p class="text-center text-success fs-5">${successMsg}</p>
-							<c:remove var="successMsg" scope="session" />
-						</c:if>
-
-						<!-- for error msg -->
-						<c:if test="${not empty errorMsg }">
-							<p class="text-center text-danger fs-5">${errorMsg}</p>
-							<c:remove var="errorMsg" scope="session" />
-						</c:if>
-						<!-- End of message print --> --%>
-
-						<table class="table table-striped">
-							<thead>
-								<tr class="my-bg-color text-white">
-									<!-- <th scope="col">Id</th> -->
-									<th scope="col">Full Name</th>
-									<th scope="col">Gender</th>
-									<th scope="col">Age</th>
-									<th scope="col">Appointment Date</th>
-									<th scope="col">Token No</th>
-									<th scope="col">Time Slot</th>
-									<!-- <th scope="col">Email</th> -->
-									<th scope="col">Phone</th>
-									<th scope="col">Diseases</th>
-									<th scope="col">Doctor Name</th>
-									<!-- <th scope="col">Address</th> -->
-									<!-- <th scope="col">User Id</th> -->
-									<th scope="col">Status</th>
-								</tr>
-							</thead>
-							<tbody>
-								<%
-								User user = (User) session.getAttribute("userObj");
-								DoctorDAO dDAO = new DoctorDAO(DBConnection.getConn());
-
-								AppointmentDAO appDAO = new AppointmentDAO(DBConnection.getConn());
-
-								List<Appointment> list = appDAO.getAllAppointmentByLoginUser(user.getId());
-								for (Appointment apptList : list) {
-									Doctor doctor = dDAO.getDoctorById(apptList.getDoctorId());
-								%>
-
-
-								<tr>
-									<%-- <th scope="row"><%= apptList.getId() %></th> --%>
-									<td><%=apptList.getFullName()%></td>
-									<td><%=apptList.getGender()%></td>
-									<td><%=apptList.getAge()%></td>
-									<td><%=apptList.getAppointmentDate()%></td>
-									<td><span class="badge bg-success" style="font-size: 0.9rem; padding: 6px 12px; background-color: var(--primary-dark) !important;"><%=apptList.getTokenNo()%></span></td>
-									<td><strong><%=apptList.getAppointmentTime()%></strong></td>
-									<%-- <td><%= apptList.getEmail()%></td> --%>
-									<td><%=apptList.getPhone()%></td>
-									<td><%=apptList.getDiseases()%></td>
-									<td><%=doctor.getFullName()%></td>
-									<%-- <td><%= apptList.getAddress()%></td> --%>
-									<%-- <td><%= apptList.getUserId()%></td> --%>
-									<td>
-										<%
-										if ("Pending".equals(apptList.getStatus())) {
-										%> <a href="" class="btn btn-sm btn-warning">Pending</a> <%
- } else {
- %> <%=apptList.getStatus()%> <%
- }
- %>
-									</td>
-
-
-								</tr>
-
-
-								<%
-								}
-								%>
-
-
-							</tbody>
-						</table>
-
-
-
-
+									<%
+										}
+									} else {
+									%>
+									<tr>
+										<td colspan="11" class="text-center py-5 text-muted fs-5">
+											<i class="fa-solid fa-folder-open mb-2 d-block fs-1"></i>
+											No appointments booked yet. <a href="user_appointment.jsp" class="text-decoration-none fw-bold myP-color">Book your first appointment now</a>
+										</td>
+									</tr>
+									<%
+									}
+									%>
+								</tbody>
+							</table>
+						</div>
 					</div>
 				</div>
-
 			</div>
-
-			<!-- col-1 -->
-			<div class="col-md-3 p-3">
-				<!-- for Background image -->
-				<!-- <img alt="" src="img/picDoc.jpg" width="500px" height="400px"> -->
-				<img alt="" src="img/wdoc.jpg" width="250" height="">
-			</div>
-
-
-
 		</div>
-
-
 	</div>
+
 
 	<!-- 2nd Div -->
 
 
 
 
+<script type="text/javascript">
+	function updateLiveTrackers(data) {
+		var trackers = document.querySelectorAll('.live-queue-tracker');
+		trackers.forEach(function(el) {
+			if (el.getAttribute('data-doctor-id') == data.doctorId && el.getAttribute('data-date') === data.appointmentDate) {
+				var myToken = parseInt(el.getAttribute('data-my-token'));
+				var servingToken = data.currentServingToken;
+				if (servingToken === 0) {
+					el.innerHTML = '<i class="fa-solid fa-clock"></i> Queue not started';
+					el.className = 'badge bg-secondary live-queue-tracker text-white';
+				} else if (servingToken === myToken) {
+					el.innerHTML = '<i class="fa-solid fa-bell fa-shake text-white"></i> YOUR TURN!';
+					el.className = 'badge bg-danger live-queue-tracker text-white';
+				} else if (servingToken > myToken) {
+					el.innerHTML = '<i class="fa-solid fa-check"></i> Passed/Completed';
+					el.className = 'badge bg-success live-queue-tracker text-white';
+				} else {
+					var diff = myToken - servingToken;
+					el.innerHTML = '<i class="fa-solid fa-user-clock"></i> Serving: #' + servingToken + ' (' + diff + ' behind)';
+					el.className = 'badge bg-info text-dark live-queue-tracker';
+				}
+			}
+		});
+	}
+</script>
 </body>
 </html>

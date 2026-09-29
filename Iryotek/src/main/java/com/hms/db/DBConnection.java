@@ -27,7 +27,7 @@ public class DBConnection {
 				dbUser = "root";
 			}
 			if (dbPassword == null || dbPassword.trim().isEmpty()) {
-				dbPassword = "Your_mysql_password";
+				dbPassword = "Chinmay980@";
 			}
 
 			// step:2- create a connection

@@ -30,6 +30,12 @@
 				<li class="nav-item"><a class="nav-link active"
 					aria-current="page" href="view_hospital.jsp"><i
 						class="fa-solid fa-list"></i> VIEW HOSPITAL</a></li>
+				<li class="nav-item"><a class="nav-link active"
+					aria-current="page" href="manage_medicines.jsp"><i
+						class="fa-solid fa-pills"></i> PHARMACY</a></li>
+				<li class="nav-item"><a class="nav-link active"
+					aria-current="page" href="manage_orders.jsp"><i
+						class="fa-solid fa-boxes-packing"></i> MEDICINE ORDERS</a></li>
 			</ul>
 
 			<div class="dropdown">

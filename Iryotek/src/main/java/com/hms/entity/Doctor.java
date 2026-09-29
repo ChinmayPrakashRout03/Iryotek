@@ -7,63 +7,47 @@ public class Doctor {
 	private String dateOfBirth;
 	private String qualification;
 	private String specialist;
+	private String diseases;
 	private String email;
 	private String phone;
 	private String password;
 	private int hospitalId;
-	
+	private String timing;
 	
 	public Doctor() {
 		super();
-		// TODO Auto-generated constructor stub
 	}
 
-
-	public Doctor(String fullName, String dateOfBirth, String qualification, String specialist, String email,
-			String phone, String password) {
-		super();
-		this.fullName = fullName;
-		this.dateOfBirth = dateOfBirth;
-		this.qualification = qualification;
-		this.specialist = specialist;
-		this.email = email;
-		this.phone = phone;
-		this.password = password;
-	}
-
-	public Doctor(String fullName, String dateOfBirth, String qualification, String specialist, String email,
-			String phone, String password, int hospitalId) {
-		super();
-		this.fullName = fullName;
-		this.dateOfBirth = dateOfBirth;
-		this.qualification = qualification;
-		this.specialist = specialist;
-		this.email = email;
-		this.phone = phone;
-		this.password = password;
-		this.hospitalId = hospitalId;
-	}
-	
-	
-	
-
-
-	public Doctor(int id, String fullName, String dateOfBirth, String qualification, String specialist, String email,
-			String phone, String password) {
+	public Doctor(int id, String fullName, String dateOfBirth, String qualification, String specialist, String diseases,
+			String email, String phone, String password, int hospitalId, String timing) {
 		super();
 		this.id = id;
 		this.fullName = fullName;
 		this.dateOfBirth = dateOfBirth;
 		this.qualification = qualification;
 		this.specialist = specialist;
+		this.diseases = diseases;
 		this.email = email;
 		this.phone = phone;
 		this.password = password;
+		this.hospitalId = hospitalId;
+		this.timing = timing;
 	}
 
-
-	
-
+	public Doctor(String fullName, String dateOfBirth, String qualification, String specialist, String diseases, String email,
+			String phone, String password, int hospitalId, String timing) {
+		super();
+		this.fullName = fullName;
+		this.dateOfBirth = dateOfBirth;
+		this.qualification = qualification;
+		this.specialist = specialist;
+		this.diseases = diseases;
+		this.email = email;
+		this.phone = phone;
+		this.password = password;
+		this.hospitalId = hospitalId;
+		this.timing = timing;
+	}
 
 	public int getId() {
 		return id;
@@ -114,6 +98,14 @@ public class Doctor {
 		this.specialist = specialist;
 	}
 
+	public String getDiseases() {
+		return diseases;
+	}
+
+
+	public void setDiseases(String diseases) {
+		this.diseases = diseases;
+	}
 
 	public String getEmail() {
 		return email;
@@ -151,9 +143,13 @@ public class Doctor {
 	public void setHospitalId(int hospitalId) {
 		this.hospitalId = hospitalId;
 	}
-	
-	
-	
-	
+
+	public String getTiming() {
+		return timing;
+	}
+
+	public void setTiming(String timing) {
+		this.timing = timing;
+	}
 	
 }

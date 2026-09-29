@@ -36,19 +36,136 @@ public class AppointmentDAO {
 		return appointment;
 	}
 
-	public static String calculateTimeForToken(int tokenNo) {
-		int startHour = 9;
-		int totalMinutes = (tokenNo - 1) * 15;
-		int targetHour = startHour + totalMinutes / 60;
-		int targetMinute = totalMinutes % 60;
-		String period = "AM";
-		if (targetHour >= 12) {
-			if (targetHour > 12) {
-				targetHour -= 12;
+	public static String calculateNextAppointmentTime(String appointmentDate, String lastAllocatedTimeStr, String shiftStartStr, String shiftEndStr) {
+		java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("hh:mm a", java.util.Locale.US);
+		java.time.LocalTime shiftStart = java.time.LocalTime.of(9, 0);
+		java.time.LocalTime shiftEnd = java.time.LocalTime.of(17, 0);
+		try {
+			shiftStart = java.time.LocalTime.parse(shiftStartStr, formatter);
+			shiftEnd = java.time.LocalTime.parse(shiftEndStr, formatter);
+		} catch(Exception e) {}
+
+		java.time.LocalTime nextTime = shiftStart;
+
+		if (lastAllocatedTimeStr != null && !lastAllocatedTimeStr.isEmpty()) {
+			try {
+				java.time.LocalTime lastTime = java.time.LocalTime.parse(lastAllocatedTimeStr, formatter);
+				nextTime = lastTime.plusMinutes(15);
+			} catch (Exception e) {
+				e.printStackTrace();
 			}
-			period = "PM";
 		}
-		return String.format("%02d:%02d %s", targetHour, targetMinute, period);
+
+		// Check if the appointment date is today in IST
+		java.time.ZoneId istZone = java.time.ZoneId.of("Asia/Kolkata");
+		java.time.LocalDate today = java.time.LocalDate.now(istZone);
+		java.time.LocalDate apptDate = null;
+		try {
+			apptDate = java.time.LocalDate.parse(appointmentDate);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		if (apptDate != null && apptDate.equals(today)) {
+			java.time.LocalTime now = java.time.LocalTime.now(istZone);
+			// Add a travel/preparation buffer of 45 minutes
+			java.time.LocalTime bufferedNow = now.plusMinutes(45);
+			// Round up to nearest 15 minutes
+			int minute = bufferedNow.getMinute();
+			int addMins = 15 - (minute % 15);
+			if (addMins == 15) addMins = 0;
+			java.time.LocalTime roundedNow = bufferedNow.plusMinutes(addMins).withSecond(0).withNano(0);
+
+			if (roundedNow.isAfter(nextTime)) {
+				nextTime = roundedNow;
+			}
+		}
+
+		// Ensure nextTime is not before shiftStart (e.g. if last time somehow got messed up)
+		if (nextTime.isBefore(shiftStart)) {
+			nextTime = shiftStart;
+		}
+
+		// Check if nextTime is after shiftEnd
+		if (nextTime.isAfter(shiftEnd) || nextTime.equals(shiftEnd)) {
+			return "SHIFT_OVER"; // indicates no slots available
+		}
+
+		return nextTime.format(formatter);
+	}
+
+	public String addAppointmentV2(Appointment appointment) {
+		String result = "ERROR";
+		synchronized (AppointmentDAO.class) {
+			try {
+				// Fetch doctor's timing
+				String docSql = "select timing from doctor where id=?";
+				PreparedStatement docPstmt = this.conn.prepareStatement(docSql);
+				docPstmt.setInt(1, appointment.getDoctorId());
+				ResultSet docRs = docPstmt.executeQuery();
+				String shiftStartStr = "09:00 AM";
+				String shiftEndStr = "05:00 PM";
+				if (docRs.next()) {
+					String timing = docRs.getString("timing");
+					if (timing != null && timing.contains(" - ")) {
+						String[] parts = timing.split(" - ");
+						shiftStartStr = parts[0].trim();
+						shiftEndStr = parts[1].trim();
+					}
+				}
+				docRs.close();
+				docPstmt.close();
+
+				// Get next token number and last appointment time
+				String tokenSql = "select tokenNo, appointmentTime from appointment where doctorId=? and appointmentDate=? order by tokenNo desc limit 1";
+				PreparedStatement tokenPstmt = this.conn.prepareStatement(tokenSql);
+				tokenPstmt.setInt(1, appointment.getDoctorId());
+				tokenPstmt.setString(2, appointment.getAppointmentDate());
+				ResultSet rs = tokenPstmt.executeQuery();
+				int nextToken = 1;
+				String lastTime = null;
+				if (rs.next()) {
+					nextToken = rs.getInt("tokenNo") + 1;
+					lastTime = rs.getString("appointmentTime");
+				}
+				rs.close();
+				tokenPstmt.close();
+
+				appointment.setTokenNo(nextToken);
+				String computedTime = calculateNextAppointmentTime(appointment.getAppointmentDate(), lastTime, shiftStartStr, shiftEndStr);
+				
+				if ("SHIFT_OVER".equals(computedTime)) {
+					return "SHIFT_OVER";
+				}
+				
+				appointment.setAppointmentTime(computedTime);
+
+				String sql = "insert into appointment(userId, fullName, gender, age, appointmentDate, email, phone, diseases, doctorId, address, status, tokenNo, appointmentTime) values(?,?,?,?,?,?,?,?,?,?,?,?,?)";
+				PreparedStatement pstmt = this.conn.prepareStatement(sql);
+
+				pstmt.setInt(1, appointment.getUserId());
+				pstmt.setString(2, appointment.getFullName());
+				pstmt.setString(3, appointment.getGender());
+				pstmt.setString(4, appointment.getAge());
+				pstmt.setString(5, appointment.getAppointmentDate());
+				pstmt.setString(6, appointment.getEmail());
+				pstmt.setString(7, appointment.getPhone());
+				pstmt.setString(8, appointment.getDiseases());
+				pstmt.setInt(9, appointment.getDoctorId());
+				pstmt.setString(10, appointment.getAddress());
+				pstmt.setString(11, appointment.getStatus());
+				pstmt.setInt(12, appointment.getTokenNo());
+				pstmt.setString(13, appointment.getAppointmentTime());
+
+				pstmt.executeUpdate();
+				pstmt.close();
+				result = "SUCCESS";
+
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+		return result;
 	}
 
 	//for create appointment
@@ -56,21 +173,23 @@ public class AppointmentDAO {
 		boolean f = false;
 		synchronized (AppointmentDAO.class) {
 			try {
-				// Get next token number
-				String tokenSql = "select coalesce(max(tokenNo), 0) from appointment where doctorId=? and appointmentDate=?";
+				// Get next token number and last appointment time
+				String tokenSql = "select tokenNo, appointmentTime from appointment where doctorId=? and appointmentDate=? order by tokenNo desc limit 1";
 				PreparedStatement tokenPstmt = this.conn.prepareStatement(tokenSql);
 				tokenPstmt.setInt(1, appointment.getDoctorId());
 				tokenPstmt.setString(2, appointment.getAppointmentDate());
 				ResultSet rs = tokenPstmt.executeQuery();
 				int nextToken = 1;
+				String lastTime = null;
 				if (rs.next()) {
-					nextToken = rs.getInt(1) + 1;
+					nextToken = rs.getInt("tokenNo") + 1;
+					lastTime = rs.getString("appointmentTime");
 				}
 				rs.close();
 				tokenPstmt.close();
 
 				appointment.setTokenNo(nextToken);
-				String computedTime = calculateTimeForToken(nextToken);
+				String computedTime = calculateNextAppointmentTime(appointment.getAppointmentDate(), lastTime, "09:00 AM", "05:00 PM");
 				appointment.setAppointmentTime(computedTime);
 
 				String sql = "insert into appointment(userId, fullName, gender, age, appointmentDate, email, phone, diseases, doctorId, address, status, tokenNo, appointmentTime) values(?,?,?,?,?,?,?,?,?,?,?,?,?)";
@@ -195,6 +314,22 @@ public class AppointmentDAO {
 			e.printStackTrace();
 		}
 		return appList;
+	}
+
+	public boolean hasPendingAppointment(int userId) {
+		boolean exists = false;
+		try {
+			String sql = "select count(*) from appointment where userId=? and status='Pending'";
+			PreparedStatement pstmt = this.conn.prepareStatement(sql);
+			pstmt.setInt(1, userId);
+			ResultSet resultSet = pstmt.executeQuery();
+			if (resultSet.next()) {
+				exists = resultSet.getInt(1) > 0;
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return exists;
 	}
 
 }

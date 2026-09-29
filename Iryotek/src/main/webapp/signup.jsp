@@ -17,14 +17,7 @@
 <%@include file="component/allcss.jsp"%>
 <!-- end of boostrap css -->
 
-<!-- customs css for this page -->
-<style type="text/css">
-.my-card {
-	box-shadow: 0px 0px 10px 1px maroon;
-	/*box-shadow: 0px 0px 10px 0px rgba(0,0,0,0.3);*/
-}
-</style>
-<!-- end of customs css for this page -->
+
 
 </head>
 <body>
@@ -33,58 +26,55 @@
 	<!-- end navbar -->
 
 	<!-- User Register -->
-	<div class="container p-5">
-		<div class="row">
-			<div class="col-md-4 offset-md-4">
-				<div class="card my-card">
-					<div class="card-header text-center text-white my-bg-color">
-						<!-- <p class="fs-4 text-center mt-1"><i class="fa-solid fa-users"></i> <br>User Login</p> -->
-						<p class="fs-4 text-center text-white mt-2">
-							<i class="fa fa-user-plus"></i> User Register
-						</p>
-					</div>
-					<div class="card-body">
-						<!-- <p class="fs-4 text-center">User Register</p> -->
+	<div class="auth-page-wrapper">
+		<div class="container">
+			<div class="row justify-content-center">
+				<div class="col-lg-5 col-md-7">
+					<div class="card my-card">
+						<div class="card-header text-center text-white my-bg-color py-4">
+							<h4 class="mb-0 fw-bold"><i class="fa-solid fa-user-plus me-2"></i> User Register</h4>
+						</div>
+						
+						<div class="card-body p-4 p-md-5">
+							<c:if test="${not empty successMsg}">
+								<div class="alert alert-success alert-dismissible fade show text-center" role="alert">
+									<i class="fa-solid fa-circle-check me-2"></i> ${successMsg}
+									<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+								</div>
+								<c:remove var="successMsg" scope="session" />
+							</c:if>
 
-						<!-- message print -->
-						<!-- for success msg -->
-						<c:if test="${not empty successMsg }">
-							<p class="text-center text-success fs-3">${successMsg}</p>
-							<c:remove var="successMsg" scope="session" />
-						</c:if>
+							<c:if test="${not empty errorMsg}">
+								<div class="alert alert-danger alert-dismissible fade show text-center" role="alert">
+									<i class="fa-solid fa-triangle-exclamation me-2"></i> ${errorMsg}
+									<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+								</div>
+								<c:remove var="errorMsg" scope="session" />
+							</c:if>
 
-						<!-- for error msg -->
-						<c:if test="${not empty errorMsg }">
-							<p class="text-center text-danger fs-3">${errorMsg}</p>
-							<c:remove var="errorMsg" scope="session" />
-						</c:if>
-						<!-- End of message print -->
+							<form action="user_register" method="post" class="mt-2">
+								<div class="mb-4">
+									<label class="form-label fw-semibold text-dark">Full Name</label>
+									<input name="fullName" type="text" placeholder="Enter Full Name" class="form-control oreo-input-pill" required>
+								</div>
+								<div class="mb-4">
+									<label class="form-label fw-semibold text-dark">Email Address</label>
+									<input name="email" type="email" placeholder="Enter Email" class="form-control oreo-input-pill" required>
+									<div id="emailHelp" class="form-text mt-1 text-muted fs-7">We'll never share your email with anyone else.</div>
+								</div>
+								<div class="mb-4">
+									<label class="form-label fw-semibold text-dark">Password</label>
+									<input name="password" type="password" placeholder="Enter password" class="form-control oreo-input-pill" required>
+								</div>
 
-						<!-- boostrap form -->
-						<form action="user_register" method="post">
-							<div class="mb-3">
-								<label class="form-label">Full Name</label> <input
-									name="fullName" type="text" placeholder="Enter full name"
-									class="form-control">
+								<button type="submit" class="btn-oreo-coral-submit mt-2">Register</button>
+							</form>
 
+							<div class="text-center mt-4 pt-2">
+								<span class="text-muted">Already have an account?</span>
+								<a href="user_login.jsp" class="fw-bold ms-1" style="color: var(--oreo-cyan); text-decoration: none;">Sign In</a>
 							</div>
-							<div class="mb-3">
-								<label class="form-label">Email address</label> <input
-									name="email" type="email" placeholder="Enter Email"
-									class="form-control">
-								<div id="emailHelp" class="form-text">We'll never share
-									your email with anyone else.</div>
-							</div>
-							<div class="mb-3">
-								<label class="form-label">Password</label> <input
-									name="password" type="password" placeholder="Enter password"
-									class="form-control">
-							</div>
-
-							<button type="submit" class="btn my-bg-color text-white col-md-12">Register</button>
-						</form>
-						<!-- <br>Don't have an account? <a href="#!" class="text-decoration-none">create one</a> -->
-						<!-- end of boostrap form -->
+						</div>
 					</div>
 				</div>
 			</div>

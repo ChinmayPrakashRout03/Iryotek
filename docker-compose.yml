@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  db:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: Chinmay980@
+      MYSQL_DATABASE: hospital
+    ports:
+      - "3307:3306"
+    volumes:
+      - ./init-scripts:/docker-entrypoint-initdb.d
+    # The healthcheck ensures that the massive 100k+ rows dataset is fully inserted
+    # before Docker considers the DB "healthy" and allows the Java App to start.
+    healthcheck:
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 30s
+
+  app:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "8082:8080"
+    environment:
+      # useSSL=false and allowPublicKeyRetrieval=true are required for MySQL 8+
+      DB_URL: jdbc:mysql://db:3306/hospital?useSSL=false&allowPublicKeyRetrieval=true
+      DB_USER: root
+      DB_PASSWORD: Chinmay980@
+      GEMINI_API_KEY: AQ.Ab8RN6K0NnN_Ehi9RrmLReEAq5C2d1ZKEWcbcbMkY_x-6ggk_A
+    depends_on:
+      db:
+        condition: service_healthy

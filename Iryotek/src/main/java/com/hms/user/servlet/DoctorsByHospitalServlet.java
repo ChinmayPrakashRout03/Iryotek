@@ -26,20 +26,61 @@ public class DoctorsByHospitalServlet extends HttpServlet {
 
 		try {
 			int hospitalId = Integer.parseInt(req.getParameter("hospitalId"));
+			String disease = req.getParameter("disease");
+			String dateStr = req.getParameter("date");
 
 			DoctorDAO doctorDAO = new DoctorDAO(DBConnection.getConn());
-			List<Doctor> doctorList = doctorDAO.getDoctorsByHospitalId(hospitalId);
+			List<Doctor> doctorList;
+			if (disease != null && !disease.trim().isEmpty()) {
+				doctorList = doctorDAO.getDoctorsByHospitalAndDisease(hospitalId, disease);
+			} else {
+				doctorList = doctorDAO.getDoctorsByHospitalId(hospitalId);
+			}
+
+			java.time.ZoneId istZone = java.time.ZoneId.of("Asia/Kolkata");
+			java.time.LocalDate today = java.time.LocalDate.now(istZone);
+			java.time.LocalDate selectedDate = null;
+			if (dateStr != null && !dateStr.trim().isEmpty()) {
+				try {
+					selectedDate = java.time.LocalDate.parse(dateStr);
+				} catch(Exception e){}
+			}
+
+			java.time.LocalTime nowTime = java.time.LocalTime.now(istZone);
+			java.time.format.DateTimeFormatter timeFormatter = java.time.format.DateTimeFormatter.ofPattern("hh:mm a", java.util.Locale.US);
+			boolean isToday = (selectedDate != null && selectedDate.equals(today));
 
 			// Build JSON manually (no external library needed)
 			StringBuilder json = new StringBuilder("[");
-			for (int i = 0; i < doctorList.size(); i++) {
-				Doctor d = doctorList.get(i);
-				if (i > 0) json.append(",");
+			boolean first = true;
+			for (Doctor d : doctorList) {
+				if (isToday) {
+					// Check if shift is over
+					String timing = d.getTiming(); // e.g. "10:00 AM - 02:00 PM"
+					if (timing != null && timing.contains("-")) {
+						try {
+							String[] parts = timing.split("-");
+							if (parts.length == 2) {
+								String endStr = parts[1].trim(); // "02:00 PM"
+								java.time.LocalTime shiftEnd = java.time.LocalTime.parse(endStr, timeFormatter);
+								if (nowTime.isAfter(shiftEnd) || nowTime.equals(shiftEnd)) {
+									// Shift is over today, skip this doctor!
+									continue;
+								}
+							}
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
+					}
+				}
+
+				if (!first) json.append(",");
 				json.append("{");
 				json.append("\"id\":").append(d.getId()).append(",");
 				json.append("\"fullName\":\"").append(escapeJson(d.getFullName())).append("\",");
 				json.append("\"specialist\":\"").append(escapeJson(d.getSpecialist())).append("\"");
 				json.append("}");
+				first = false;
 			}
 			json.append("]");
 

@@ -1,0 +1,112 @@
+{
+  "schemaVersion": 1,
+  "ok": false,
+  "command": "finalize",
+  "status": "fail",
+  "type": "architecture",
+  "quality": "showcase",
+  "startedAt": "2026-09-29T04:19:03.979Z",
+  "specification": {
+    "path": "/Users/chinmayprakashrout/Iryotek-Project/iryotek-runtime.architecture.json",
+    "sha256": "1baffc7cbcc271cac462256fe4f98da71647c5e833d12be7547fcd48aef06216",
+    "bytes": 9513
+  },
+  "artifact": {
+    "path": "/Users/chinmayprakashrout/Iryotek-Project/iryotek-runtime-architecture.html"
+  },
+  "stages": {
+    "validate": {
+      "status": "fail",
+      "exitCode": 1,
+      "durationMs": null,
+      "command": [
+        "/Users/chinmayprakashrout/.nvm/versions/node/v22.22.2/bin/node",
+        "/Users/chinmayprakashrout/.agents/skills/archify/bin/archify.mjs",
+        "deliver",
+        "architecture",
+        "/Users/chinmayprakashrout/Iryotek-Project/iryotek-runtime.architecture.json",
+        "/Users/chinmayprakashrout/Iryotek-Project/iryotek-runtime-architecture.html",
+        "--quality",
+        "showcase",
+        "--json"
+      ],
+      "receipt": {
+        "schemaVersion": 1,
+        "ok": false,
+        "command": "deliver",
+        "receiptId": "6d74af77-509e-4ad2-b7c6-2877644ab100",
+        "stage": "render",
+        "type": "architecture",
+        "input": "/Users/chinmayprakashrout/Iryotek-Project/iryotek-runtime.architecture.json",
+        "output": "/Users/chinmayprakashrout/Iryotek-Project/iryotek-runtime-architecture.html",
+        "error": "This diagram declares source evidence. Pass --repo-root <repository> so Archify can verify it before rendering.",
+        "diagnostics": [
+          {
+            "code": "repository-evidence/root-required",
+            "severity": "error",
+            "message": "This diagram declares source evidence. Pass --repo-root <repository> so Archify can verify it before rendering.",
+            "subject": {
+              "surface": "repository-evidence",
+              "path": "/meta/repository"
+            },
+            "evidence": {},
+            "supportedFixes": [
+              "pass --repo-root with the matching local Git checkout"
+            ]
+          }
+        ],
+        "provenance": "absent",
+        "update": {
+          "status": "unavailable",
+          "installedVersion": null,
+          "availableVersion": null,
+          "releaseNotes": null,
+          "checkedAt": null,
+          "source": null,
+          "noticeRequired": false,
+          "noticeText": null,
+          "reason": "disabled"
+        }
+      },
+      "execution": "embedded-in-deliver"
+    },
+    "deliver": {
+      "status": "not-run",
+      "execution": "blocked-by-validate"
+    }
+  },
+  "diagnostics": [
+    {
+      "code": "repository-evidence/root-required",
+      "severity": "error",
+      "message": "This diagram declares source evidence. Pass --repo-root <repository> so Archify can verify it before rendering.",
+      "subject": {
+        "surface": "repository-evidence",
+        "path": "/meta/repository"
+      },
+      "evidence": {},
+      "supportedFixes": [
+        "pass --repo-root with the matching local Git checkout"
+      ]
+    }
+  ],
+  "evidence": {
+    "receipt": "/Users/chinmayprakashrout/Iryotek-Project/iryotek-runtime-architecture.finalize.json",
+    "summaryReceipt": "/Users/chinmayprakashrout/Iryotek-Project/iryotek-runtime-architecture.finalize-summary.json"
+  },
+  "visualReview": "not-requested",
+  "failedStage": "validate",
+  "finishedAt": "2026-09-29T04:19:04.189Z",
+  "durationMs": 209,
+  "update": {
+    "status": "unavailable",
+    "installedVersion": null,
+    "availableVersion": null,
+    "releaseNotes": null,
+    "checkedAt": null,
+    "source": null,
+    "noticeRequired": false,
+    "noticeText": null,
+    "reason": "cache-valid"
+  }
+}

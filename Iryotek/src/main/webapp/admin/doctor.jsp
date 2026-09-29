@@ -134,7 +134,7 @@
 									class="form-control">
 							</div>
 
-							<button type="submit" class="btn btn-danger text-white col-md-12">Register</button>
+							<button type="submit" class="btn-uiverse col-md-12">Register</button>
 						</form>
 						<!-- <br>Don't have an account? <a href="#!"
 							class="text-decoration-none">create one</a> -->

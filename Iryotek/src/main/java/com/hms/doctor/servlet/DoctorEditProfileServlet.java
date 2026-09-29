@@ -33,7 +33,7 @@ public class DoctorEditProfileServlet extends HttpServlet {
 			
 			int id = Integer.parseInt(req.getParameter("doctorId"));
 
-			Doctor doctor = new Doctor(id, fullName, dateOfBirth, qualification, specialist, email, phone, "");
+			Doctor doctor = new Doctor(id, fullName, dateOfBirth, qualification, specialist, "", email, phone, "", 0, "09:00 AM - 05:00 PM");
 
 			DoctorDAO docDAO = new DoctorDAO(DBConnection.getConn());
 

@@ -1,0 +1,341 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Iryotek Healthcare Platform — High-Level Runtime Architecture",
+    "output": "iryotek-runtime-architecture.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/ChinmayPrakashRout03/Iryotek.git",
+      "revision": "47c516024bb54e402250609e11576e60b7519262",
+      "link_mode": "local-only"
+    }
+  },
+  "components": [
+    {
+      "id": "client",
+      "type": "external",
+      "label": "Patient & Staff Clients",
+      "sublabel": "Browser / Mobile (HTTPS & WSS)",
+      "tag": "Untrusted Zone",
+      "icon": "person",
+      "pos": [60, 320],
+      "size": [160, 64],
+      "sources": [
+        {
+          "path": "Iryotek/src/main/webapp/index.jsp",
+          "line": 1,
+          "end_line": 50,
+          "label": "Client JSP Portal"
+        }
+      ]
+    },
+    {
+      "id": "web_container",
+      "type": "backend",
+      "label": "Tomcat Web Container",
+      "sublabel": "Catalina Servlet Engine :8080",
+      "tag": "Routing & MVC Controller",
+      "icon": "backend",
+      "pos": [300, 320],
+      "size": [170, 64],
+      "sources": [
+        {
+          "path": "Iryotek/src/main/webapp/WEB-INF/web.xml",
+          "line": 1,
+          "end_line": 40,
+          "label": "Servlet Mappings"
+        }
+      ]
+    },
+    {
+      "id": "websocket_broker",
+      "type": "messagebus",
+      "label": "Queue WebSocket Server",
+      "sublabel": "javax.websocket /queueStatus",
+      "tag": "Real-Time Broadcaster",
+      "icon": "messagebus",
+      "pos": [300, 160],
+      "size": [170, 64],
+      "sources": [
+        {
+          "path": "Iryotek/src/main/java/com/hms/websocket/QueueWebSocketServer.java",
+          "line": 15,
+          "end_line": 45,
+          "label": "Queue WebSocket Server"
+        }
+      ]
+    },
+    {
+      "id": "ai_triage",
+      "type": "backend",
+      "label": "Sakura AI Clinical Engine",
+      "sublabel": "5-Layer Triage & Session Memory",
+      "tag": "Pre-Screen & RAG",
+      "icon": "active",
+      "pos": [560, 110],
+      "size": [180, 64],
+      "sources": [
+        {
+          "path": "Iryotek/src/main/java/com/hms/user/servlet/AISymptomServlet.java",
+          "line": 28,
+          "end_line": 70,
+          "label": "Sakura AI Servlet"
+        }
+      ]
+    },
+    {
+      "id": "gemini_cloud",
+      "type": "cloud",
+      "label": "Google Gemini AI",
+      "sublabel": "gemini-3.5-flash-lite :443",
+      "tag": "External LLM API",
+      "icon": "cloud",
+      "pos": [840, 110],
+      "size": [170, 64],
+      "sources": [
+        {
+          "path": "Iryotek/src/main/java/com/hms/user/servlet/AISymptomServlet.java",
+          "line": 120,
+          "end_line": 165,
+          "label": "Gemini HTTP/2 Client"
+        }
+      ]
+    },
+    {
+      "id": "queue_scheduler",
+      "type": "backend",
+      "label": "Appointment & Queue Engine",
+      "sublabel": "Synchronized 15-min Slot Allocator",
+      "tag": "Collision-Free Queuing",
+      "icon": "calendar",
+      "pos": [560, 220],
+      "size": [180, 64],
+      "sources": [
+        {
+          "path": "Iryotek/src/main/java/com/hms/user/servlet/AppointmentServlet.java",
+          "line": 16,
+          "end_line": 50,
+          "label": "Appointment Controller"
+        }
+      ]
+    },
+    {
+      "id": "auth_service",
+      "type": "security",
+      "label": "Auth & Session Guard",
+      "sublabel": "BCrypt & RBAC Role Filters",
+      "tag": "Session Security",
+      "icon": "security",
+      "pos": [560, 320],
+      "size": [180, 64],
+      "sources": [
+        {
+          "path": "Iryotek/src/main/java/com/hms/dao/UserDAO.java",
+          "line": 40,
+          "end_line": 80,
+          "label": "BCrypt User Auth"
+        }
+      ]
+    },
+    {
+      "id": "pharmacy_service",
+      "type": "backend",
+      "label": "E-Pharmacy & Prescriptions",
+      "sublabel": "Cart, Orders & Rx Engine",
+      "tag": "Digital Fulfillment",
+      "icon": "briefcase",
+      "pos": [560, 430],
+      "size": [180, 64],
+      "sources": [
+        {
+          "path": "Iryotek/src/main/java/com/hms/user/servlet/CheckoutServlet.java",
+          "line": 20,
+          "end_line": 60,
+          "label": "Checkout Controller"
+        }
+      ]
+    },
+    {
+      "id": "export_reporter",
+      "type": "backend",
+      "label": "Document Export Engine",
+      "sublabel": "Apache POI (XLSX) & OpenPDF",
+      "tag": "Compliance Reporting",
+      "icon": "neutral",
+      "pos": [560, 540],
+      "size": [180, 64],
+      "sources": [
+        {
+          "path": "Iryotek/src/main/java/com/hms/admin/servlet/ExportAppointmentsExcelServlet.java",
+          "line": 20,
+          "end_line": 55,
+          "label": "Excel POI Exporter"
+        }
+      ]
+    },
+    {
+      "id": "mysql_database",
+      "type": "database",
+      "label": "MySQL Database",
+      "sublabel": "InnoDB Engine :3306",
+      "tag": "100k+ Docs, 23k+ Meds",
+      "icon": "database",
+      "pos": [840, 320],
+      "size": [170, 74],
+      "sources": [
+        {
+          "path": "Iryotek/src/main/java/com/hms/db/DBConnection.java",
+          "line": 8,
+          "end_line": 32,
+          "label": "JDBC Connection Pool"
+        }
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "Iryotek Application Container (Docker: iryotek-project-app-1 / Tomcat 9)",
+      "wraps": [
+        "web_container",
+        "websocket_broker",
+        "ai_triage",
+        "queue_scheduler",
+        "auth_service",
+        "pharmacy_service",
+        "export_reporter"
+      ]
+    },
+    {
+      "kind": "security-group",
+      "label": "Isolated Database Tier (Docker: iryotek-project-db-1 / Port 3306)",
+      "wraps": [
+        "mysql_database"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "conn-client-to-web",
+      "from": "client",
+      "to": "web_container",
+      "label": "HTTPS (User/Doc/Admin Traffic)",
+      "variant": "emphasis"
+    },
+    {
+      "id": "conn-client-to-ws",
+      "from": "client",
+      "to": "websocket_broker",
+      "label": "WSS (/queueStatus)",
+      "variant": "dashed"
+    },
+    {
+      "id": "conn-web-to-ai",
+      "from": "web_container",
+      "to": "ai_triage",
+      "label": "Symptom Query"
+    },
+    {
+      "id": "conn-ai-to-gemini",
+      "from": "ai_triage",
+      "to": "gemini_cloud",
+      "label": "HTTPS REST (Flash-Lite / RAG)",
+      "variant": "emphasis"
+    },
+    {
+      "id": "conn-web-to-queue",
+      "from": "web_container",
+      "to": "queue_scheduler",
+      "label": "Book & Allocate Token"
+    },
+    {
+      "id": "conn-queue-to-ws",
+      "from": "queue_scheduler",
+      "to": "websocket_broker",
+      "label": "Broadcast Queue Advance",
+      "variant": "dashed"
+    },
+    {
+      "id": "conn-web-to-auth",
+      "from": "web_container",
+      "to": "auth_service",
+      "label": "Authenticate & RBAC Check",
+      "variant": "security"
+    },
+    {
+      "id": "conn-web-to-pharmacy",
+      "from": "web_container",
+      "to": "pharmacy_service",
+      "label": "Rx & Cart Checkout"
+    },
+    {
+      "id": "conn-web-to-export",
+      "from": "web_container",
+      "to": "export_reporter",
+      "label": "Generate XLSX / PDF"
+    },
+    {
+      "id": "conn-auth-to-db",
+      "from": "auth_service",
+      "to": "mysql_database",
+      "label": "Verify Credentials",
+      "variant": "security"
+    },
+    {
+      "id": "conn-queue-to-db",
+      "from": "queue_scheduler",
+      "to": "mysql_database",
+      "label": "Atomic Slot Lock & Insert"
+    },
+    {
+      "id": "conn-ai-to-db",
+      "from": "ai_triage",
+      "to": "mysql_database",
+      "label": "RAG Doctor & Dept Lookup"
+    },
+    {
+      "id": "conn-pharmacy-to-db",
+      "from": "pharmacy_service",
+      "to": "mysql_database",
+      "label": "Orders & Inventory Stock"
+    },
+    {
+      "id": "conn-export-to-db",
+      "from": "export_reporter",
+      "to": "mysql_database",
+      "label": "Fetch Registries"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "rose",
+      "title": "Trust & Security Boundaries",
+      "items": [
+        "Client Zone: Untrusted external user traffic over TLS/HTTPS and WebSocket Secure (WSS)",
+        "Application Container: Containerized Tomcat 9 boundary enforcing BCrypt auth & role-based route guards",
+        "Database Tier: Isolated MySQL 8.0 network tier with parameterized PreparedStatements",
+        "External AI Cloud: Outbound HTTPS to Google Gemini with clinical emergency pre-screening"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Clinical & Scheduling Core",
+      "items": [
+        "Sakura AI: 5-layer clinical triage protocol with sub-second emergency detection override",
+        "Collision-Free Queue: Deterministic sequential 15-minute slot allocator (09:00 AM + (N-1)*15m)",
+        "WebSocket Hub: Full-duplex live waiting-room queue state broadcast to connected displays",
+        "RAG Knowledge Base: Real-time doctor, specialty, OPD timing, and hospital facility injection"
+      ]
+    },
+    {
+      "dot": "cyan",
+      "title": "Pharmacy & Administrative Services",
+      "items": [
+        "Digital Prescriptions: Doctor-authored structured medication plans linked to appointment records",
+        "E-Pharmacy Storefront: 23,400+ authentic medicines with persistent carts and multi-address checkout",
+        "Compliance & Reporting: One-click Apache POI Excel (.xlsx) and OpenPDF report generation"
+      ]
+    }
+  ]
+}

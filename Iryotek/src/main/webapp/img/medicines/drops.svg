@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f0fdfa"/>
+      <stop offset="100%" stop-color="#ccfbf1"/>
+    </linearGradient>
+    <linearGradient id="drop" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#06b6d4"/>
+      <stop offset="100%" stop-color="#0891b2"/>
+    </linearGradient>
+  </defs>
+  <rect width="120" height="120" rx="24" fill="url(#bg)"/>
+  <!-- Dropper Bulb -->
+  <path d="M48,22 Q60,14 72,22 L68,34 L52,34 Z" fill="#0f766e"/>
+  <!-- Dropper Tube -->
+  <rect x="54" y="34" width="12" height="40" fill="#e0f2fe" stroke="#0891b2" stroke-width="1.5"/>
+  <polygon points="54,74 66,74 60,86" fill="#e0f2fe" stroke="#0891b2" stroke-width="1.5"/>
+  <!-- Liquid Drop Falling -->
+  <path d="M60,94 C56,100 52,104 52,108 C52,112.4 55.6,116 60,116 C64.4,116 68,112.4 68,108 C68,104 64,100 60,94 Z" fill="url(#drop)"/>
+</svg>

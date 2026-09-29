@@ -6,14 +6,14 @@ import java.sql.DriverManager;
 public class DBConnection {
 
 	private static Connection conn;
-	
+
 	public static Connection getConn() {
-		
+
 		try {
-			
-			//step:1 for connection - load the driver class 
+
+			// step:1 for connection - load the driver class
 			Class.forName("com.mysql.cj.jdbc.Driver");
-			
+
 			// Fetch database configuration from environment variables
 			String dbUrl = System.getenv("DB_URL");
 			String dbUser = System.getenv("DB_USER");
@@ -27,16 +27,16 @@ public class DBConnection {
 				dbUser = "root";
 			}
 			if (dbPassword == null || dbPassword.trim().isEmpty()) {
-				dbPassword = "Your_mysql_password";
+				dbPassword = "Chinmay980@";
 			}
 
-			//step:2- create a connection
+			// step:2- create a connection
 			conn = DriverManager.getConnection(dbUrl, dbUser, dbPassword);
-			
+
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		
+
 		return conn;
 	}
 }

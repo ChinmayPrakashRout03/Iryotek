@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 1,
+  "command": "deliver",
+  "status": "pending",
+  "receiptId": "6d74af77-509e-4ad2-b7c6-2877644ab100",
+  "input": "/Users/chinmayprakashrout/Iryotek-Project/iryotek-runtime.architecture.json",
+  "output": "/Users/chinmayprakashrout/Iryotek-Project/iryotek-runtime-architecture.html"
+}

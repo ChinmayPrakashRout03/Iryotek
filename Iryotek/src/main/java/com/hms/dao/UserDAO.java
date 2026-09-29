@@ -5,6 +5,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
 import com.hms.entity.User;
+import org.mindrot.jbcrypt.BCrypt;
 
 public class UserDAO {
 
@@ -23,10 +24,12 @@ public class UserDAO {
 			// insert user in db
 			String sql = "insert into user_details(full_name, email, password) values(?,?,?)";
 
+			String hashed = BCrypt.hashpw(user.getPassword(), BCrypt.gensalt());
+
 			PreparedStatement pstmt = conn.prepareStatement(sql);
 			pstmt.setString(1, user.getFullName());
 			pstmt.setString(2, user.getEmail());
-			pstmt.setString(3, user.getPassword());
+			pstmt.setString(3, hashed);
 
 			pstmt.executeUpdate();
 
@@ -51,29 +54,46 @@ public class UserDAO {
 		User user = null;
 
 		try {
-			String sql = "select * from user_details where email=? and password=?";
+			String sql = "select * from user_details where email=?";
 
 			PreparedStatement pstmt = this.conn.prepareStatement(sql);
 			pstmt.setString(1, email);
-			pstmt.setString(2, password);
 
 			ResultSet resultSet = pstmt.executeQuery();
-			while (resultSet.next()) {
-				// if any row available, then fetch the data of that row...
+			if (resultSet.next()) {
+				String dbPassword = resultSet.getString("password");
+				boolean passwordMatches = false;
+				boolean needsMigration = false;
 
-				// create new user object
-				user = new User();
+				if (dbPassword.startsWith("$2a$") || dbPassword.startsWith("$2b$") || dbPassword.startsWith("$2y$")) {
+					try {
+						passwordMatches = BCrypt.checkpw(password, dbPassword);
+					} catch (IllegalArgumentException e) {
+						passwordMatches = password.equals(dbPassword);
+						needsMigration = passwordMatches;
+					}
+				} else {
+					passwordMatches = password.equals(dbPassword);
+					needsMigration = passwordMatches;
+				}
 
-				// fetch data one by one from db table and set it/bind it to user's objects.
-				// e.g fetch id and set to user object
-				// user.setId(resultSet.getInt(1));or below line both are same
-				// (1) means db table colm index number 1 which is id
-				// getString() takes both column indexNumber or columnLabel name...
-				user.setId(resultSet.getInt("id"));
-				user.setFullName(resultSet.getString("full_name"));
-				user.setEmail(resultSet.getString("email"));
-				user.setPassword(resultSet.getString("password"));
+				if (passwordMatches) {
+					user = new User();
+					user.setId(resultSet.getInt("id"));
+					user.setFullName(resultSet.getString("full_name"));
+					user.setEmail(resultSet.getString("email"));
+					user.setPassword(dbPassword);
 
+					if (needsMigration) {
+						String hashed = BCrypt.hashpw(password, BCrypt.gensalt());
+						String updateSql = "update user_details set password=? where id=?";
+						PreparedStatement updatePstmt = this.conn.prepareStatement(updateSql);
+						updatePstmt.setString(1, hashed);
+						updatePstmt.setInt(2, user.getId());
+						updatePstmt.executeUpdate();
+						user.setPassword(hashed);
+					}
+				}
 			}
 
 		} catch (Exception e) {
@@ -91,17 +111,40 @@ public class UserDAO {
 
 		try {
 
-			String sql = "select * from user_details where id=? and password=?";
+			String sql = "select * from user_details where id=?";
 			PreparedStatement pstmt = this.conn.prepareStatement(sql);
 			pstmt.setInt(1, userId);
-			pstmt.setString(2, oldPassword);
 
 			ResultSet resultSet = pstmt.executeQuery();
-			//System.out.println(resultSet);
-			while (resultSet.next()) {
-				f = true;
+			if (resultSet.next()) {
+				String dbPassword = resultSet.getString("password");
+				boolean passwordMatches = false;
+				boolean needsMigration = false;
+
+				if (dbPassword.startsWith("$2a$") || dbPassword.startsWith("$2b$") || dbPassword.startsWith("$2y$")) {
+					try {
+						passwordMatches = BCrypt.checkpw(oldPassword, dbPassword);
+					} catch (IllegalArgumentException e) {
+						passwordMatches = oldPassword.equals(dbPassword);
+						needsMigration = passwordMatches;
+					}
+				} else {
+					passwordMatches = oldPassword.equals(dbPassword);
+					needsMigration = passwordMatches;
+				}
+
+				if (passwordMatches) {
+					f = true;
+					if (needsMigration) {
+						String hashed = BCrypt.hashpw(oldPassword, BCrypt.gensalt());
+						String updateSql = "update user_details set password=? where id=?";
+						PreparedStatement updatePstmt = this.conn.prepareStatement(updateSql);
+						updatePstmt.setString(1, hashed);
+						updatePstmt.setInt(2, userId);
+						updatePstmt.executeUpdate();
+					}
+				}
 			}
-		
 
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -117,9 +160,10 @@ public class UserDAO {
 
 		try {
 
+			String hashed = BCrypt.hashpw(newPassword, BCrypt.gensalt());
 			String sql = "update user_details set password=? where id=?";
 			PreparedStatement pstmt = this.conn.prepareStatement(sql);
-			pstmt.setString(1, newPassword);
+			pstmt.setString(1, hashed);
 			pstmt.setInt(2, userId);
 
 			pstmt.executeUpdate();

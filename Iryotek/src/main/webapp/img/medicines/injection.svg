@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f5f3ff"/>
+      <stop offset="100%" stop-color="#ede9fe"/>
+    </linearGradient>
+    <linearGradient id="syr" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#8b5cf6"/>
+      <stop offset="100%" stop-color="#6d28d9"/>
+    </linearGradient>
+  </defs>
+  <rect width="120" height="120" rx="24" fill="url(#bg)"/>
+  <g transform="translate(60,60) rotate(-45) translate(-45,-15)">
+    <!-- Needle -->
+    <line x1="0" y1="15" x2="22" y2="15" stroke="#94a3b8" stroke-width="2" stroke-linecap="round"/>
+    <!-- Syringe Barrel -->
+    <rect x="22" y="5" width="46" height="20" rx="3" fill="#ffffff" stroke="#8b5cf6" stroke-width="2"/>
+    <!-- Liquid Level Inside -->
+    <rect x="24" y="7" width="30" height="16" fill="url(#syr)" opacity="0.85"/>
+    <!-- Measurement Marks -->
+    <line x1="32" y1="5" x2="32" y2="10" stroke="#6d28d9" stroke-width="1.5"/>
+    <line x1="42" y1="5" x2="42" y2="10" stroke="#6d28d9" stroke-width="1.5"/>
+    <line x1="52" y1="5" x2="52" y2="10" stroke="#6d28d9" stroke-width="1.5"/>
+    <!-- Plunger -->
+    <rect x="68" y="11" width="20" height="8" fill="#6d28d9"/>
+    <rect x="88" y="4" width="5" height="22" rx="2" fill="#4c1d95"/>
+  </g>
+</svg>

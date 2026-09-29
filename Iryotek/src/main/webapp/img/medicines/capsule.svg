@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fef2f2"/>
+      <stop offset="100%" stop-color="#fee2e2"/>
+    </linearGradient>
+    <linearGradient id="capLeft" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f43f5e"/>
+      <stop offset="100%" stop-color="#e11d48"/>
+    </linearGradient>
+    <linearGradient id="capRight" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8"/>
+      <stop offset="100%" stop-color="#0284c7"/>
+    </linearGradient>
+  </defs>
+  <rect width="120" height="120" rx="24" fill="url(#bg)"/>
+  <g transform="translate(60,60) rotate(-40) translate(-40,-20)">
+    <!-- Capsule Left Half -->
+    <path d="M20,0 A20,20 0 0,0 0,20 L0,20 A20,20 0 0,0 20,40 L40,40 L40,0 Z" fill="url(#capLeft)"/>
+    <!-- Capsule Right Half -->
+    <path d="M40,0 L60,0 A20,20 0 0,1 80,20 A20,20 0 0,1 60,40 L40,40 Z" fill="url(#capRight)"/>
+    <!-- Highlight Reflection -->
+    <ellipse cx="30" cy="10" rx="14" ry="4" fill="#ffffff" opacity="0.4"/>
+    <ellipse cx="55" cy="10" rx="10" ry="3" fill="#ffffff" opacity="0.4"/>
+  </g>
+</svg>

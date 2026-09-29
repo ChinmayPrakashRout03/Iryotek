@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fff7ed"/>
+      <stop offset="100%" stop-color="#ffedd5"/>
+    </linearGradient>
+    <linearGradient id="tube" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f97316"/>
+      <stop offset="100%" stop-color="#c2410c"/>
+    </linearGradient>
+  </defs>
+  <rect width="120" height="120" rx="24" fill="url(#bg)"/>
+  <g transform="translate(60,60) rotate(-35) translate(-40,-20)">
+    <!-- Tube Cap -->
+    <rect x="0" y="12" width="14" height="16" rx="2" fill="#9a3412"/>
+    <!-- Tube Body -->
+    <path d="M14,14 L65,5 L78,20 L65,35 L14,26 Z" fill="url(#tube)"/>
+    <!-- Tube End Crimp -->
+    <rect x="75" y="16" width="10" height="8" rx="2" fill="#ea580c"/>
+    <!-- Cross on tube -->
+    <path d="M40,15 L40,25 M35,20 L45,20" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" opacity="0.9"/>
+  </g>
+</svg>

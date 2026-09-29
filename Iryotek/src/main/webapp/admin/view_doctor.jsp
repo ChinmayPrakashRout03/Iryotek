@@ -59,55 +59,62 @@
 						<!-- End of message print -->
 
 						<!-- table for doctor list -->
-
-						<table class="table table-striped">
-							<thead>
-								<tr class="table-info">
-									<!-- <th scope="col">ID</th> -->
-									<th scope="col">Full Name</th>
-									<th scope="col">DOB</th>
-									<th scope="col">Qualification</th>
-									<th scope="col">Specialist</th>
-									<th scope="col">Email</th>
-									<th scope="col">Phone</th>
-									<th scope="col">Hospital</th>
-									<th colspan="2" class="text-center" scope="col">Action</th>
-								</tr>
-							</thead>
-							<tbody>
-
-								<%
-								DoctorDAO docDAO2 = new DoctorDAO(DBConnection.getConn());
-								HospitalDAO hospDAO2 = new HospitalDAO(DBConnection.getConn());
-								List<Doctor> listOfDoc = docDAO2.getAllDoctor();
-								for (Doctor doctorLst : listOfDoc) {
-								%>
-								<tr>
-									<%-- <th scope="row"><%= doctorLst.getId()%></th> --%>
-									<th><%=doctorLst.getFullName()%></th>
-									<td><%=doctorLst.getDateOfBirth()%></td>
-									<td><%=doctorLst.getQualification()%></td>
-									<td><%=doctorLst.getSpecialist()%></td>
-									<td><%=doctorLst.getEmail()%></td>
-									<td><%=doctorLst.getPhone()%></td>
-									<td><% Hospital hosp = hospDAO2.getHospitalById(doctorLst.getHospitalId()); %><%= hosp != null ? hosp.getName() : "N/A" %></td>
-
-
-									<td><a class="btn btn-sm btn-primary"
-										href="edit_doctor.jsp?id=<%=doctorLst.getId()%>">Edit</a></td>
-									<td><a class="btn btn-sm btn-danger" href="../deleteDoctor?id=<%= doctorLst.getId() %>">Delete</a></td>
-
-
-
-								</tr>
-								<%
-								}
-								%>
-
-
-							</tbody>
-						</table>
-
+						<div class="table-responsive">
+							<table class="table align-middle table-hover text-center mb-0" style="min-width: 900px;">
+								<thead class="my-bg-color text-white">
+									<tr style="font-size: 0.85rem; letter-spacing: 0.5px; text-transform: uppercase;">
+										<th scope="col" class="py-3 px-3">Full Name</th>
+										<th scope="col" class="py-3 px-2">DOB</th>
+										<th scope="col" class="py-3 px-2">Qualification</th>
+										<th scope="col" class="py-3 px-3">Specialist</th>
+										<th scope="col" class="py-3 px-3">Email</th>
+										<th scope="col" class="py-3 px-3">Phone</th>
+										<th scope="col" class="py-3 px-3">Hospital</th>
+										<th scope="col" class="py-3 px-3">Action</th>
+									</tr>
+								</thead>
+								<tbody>
+									<%
+									DoctorDAO docDAO2 = new DoctorDAO(DBConnection.getConn());
+									HospitalDAO hospDAO2 = new HospitalDAO(DBConnection.getConn());
+									List<Doctor> listOfDoc = docDAO2.getAllDoctor();
+									if (listOfDoc != null && !listOfDoc.isEmpty()) {
+										for (Doctor doctorLst : listOfDoc) {
+											Hospital hosp = hospDAO2.getHospitalById(doctorLst.getHospitalId());
+									%>
+									<tr>
+										<td class="fw-bold text-dark px-3"><%=doctorLst.getFullName()%></td>
+										<td class="px-2"><%=doctorLst.getDateOfBirth()%></td>
+										<td class="px-2"><%=doctorLst.getQualification()%></td>
+										<td class="px-3"><span class="badge bg-light text-dark border px-2 py-1"><%=doctorLst.getSpecialist()%></span></td>
+										<td class="px-3"><%=doctorLst.getEmail()%></td>
+										<td class="px-3"><%=doctorLst.getPhone()%></td>
+										<td class="px-3 fw-semibold"><%= hosp != null ? hosp.getName() : "N/A" %></td>
+										<td class="px-3">
+											<a class="btn btn-sm btn-primary rounded-pill px-3 me-1" href="edit_doctor.jsp?id=<%=doctorLst.getId()%>">
+												<i class="fa-solid fa-pen-to-square"></i> Edit
+											</a>
+											<a class="btn btn-sm btn-danger rounded-pill px-3" href="../deleteDoctor?id=<%= doctorLst.getId() %>">
+												<i class="fa-solid fa-trash"></i> Delete
+											</a>
+										</td>
+									</tr>
+									<%
+										}
+									} else {
+									%>
+									<tr>
+										<td colspan="8" class="text-center py-5 text-muted fs-5">
+											<i class="fa-solid fa-user-doctor mb-2 d-block fs-1"></i>
+											No doctors registered yet.
+										</td>
+									</tr>
+									<%
+									}
+									%>
+								</tbody>
+							</table>
+						</div>
 						<!-- end table for doctor list -->
 
 
