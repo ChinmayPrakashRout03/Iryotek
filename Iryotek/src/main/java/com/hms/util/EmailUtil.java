@@ -13,7 +13,9 @@ public class EmailUtil {
 
     private static final String SMTP_HOST = System.getenv("SMTP_HOST") != null ? System.getenv("SMTP_HOST") : "smtp.gmail.com";
     private static final String SMTP_PORT = System.getenv("SMTP_PORT") != null ? System.getenv("SMTP_PORT") : "587";
-    private static final String SMTP_EMAIL = System.getenv("SMTP_EMAIL") != null && !System.getenv("SMTP_EMAIL").trim().isEmpty() ? System.getenv("SMTP_EMAIL") : "Iryotek@gmail.com";
+    private static final String SMTP_EMAIL = (System.getenv("SMTP_USER") != null && !System.getenv("SMTP_USER").trim().isEmpty())
+            ? System.getenv("SMTP_USER")
+            : ((System.getenv("SMTP_EMAIL") != null && !System.getenv("SMTP_EMAIL").trim().isEmpty()) ? System.getenv("SMTP_EMAIL") : "Iryotek@gmail.com");
     private static final String SMTP_PASSWORD = System.getenv("SMTP_PASSWORD") != null && !System.getenv("SMTP_PASSWORD").trim().isEmpty() ? System.getenv("SMTP_PASSWORD") : "golhbyumzymlhsfp";
 
     public static void sendEmail(String toEmail, String subject, String body) {
