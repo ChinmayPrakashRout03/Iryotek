@@ -6,6 +6,10 @@ target/
 .settings/
 .DS_Store
 *.log
+# Environment and secrets
 .env
-db.properties
-seed_data.sql
+.env.*
+*.env
+.env.local
+.env.production
+.env.development
