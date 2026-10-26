@@ -63,7 +63,6 @@ Iryotek-Project/
 │   ├── vite.config.ts            # Proxy and build settings
 │   ├── public/                   # Static files
 │   └── src/                      # React components, pages, styles
-├── legacy-website/               # Static Webflow marketing site export
 ├── database/                     # Database setup scripts and sample datasets
 │   ├── init-scripts/             # MySQL container initialization scripts (run in order)
 │   └── dataset/                  # Sample patient data and medicine catalogs
