@@ -36,7 +36,7 @@ Iryotek-Project/
 ├── .gitignore                            # Repository-wide version control ignore rules
 ├── Dockerfile                            # Multi-stage production container build definition
 ├── README.md                             # Production operations & architecture guide
-├── CLEANUP_REPORT.md                     # Root cleanup summary
+├── ARCHITECTURE_GUIDE.md                 # System architecture and modularization guide
 ├── docker-compose.yml                    # Local multi-service orchestration (DB + App)
 │
 ├── backend/                              # Java Enterprise Healthcare Platform (Maven WAR)
@@ -90,7 +90,6 @@ Iryotek-Project/
 │   │   └── iryotek-runtime-architecture.html
 │   ├── images/                           # Architecture diagrams & application previews
 │   └── maintenance/                      # Refactoring logs, audits, and manifests
-│       ├── CLEANUP_REPORT.md
 │       ├── FILE_MANIFEST.md
 │       ├── REPOSITORY_AUDIT.md
 │       └── TARGET_ARCHITECTURE.md
