@@ -33,22 +33,25 @@ The system pairs a Java servlet and JSP backend with a modern React and Vite pat
 
 ```text
 Iryotek-Project/
-├── Iryotek/                      # Java Servlet 3.1 & JSP backend (Maven WAR)
+├── backend/                      # Java Servlet 3.1 & JSP backend (Maven WAR)
 │   ├── pom.xml
+│   ├── database/                 # Co-located SQL schemas & seeds
 │   └── src/main/
 │       ├── java/com/hms/         # Controllers, DAO, Entity, Util, WebSocket
 │       └── webapp/               # JSP templates, static assets (css, js, img)
-├── new-web main/                 # Modern Patient Portal SPA (React 19, TypeScript, Vite)
+├── frontend/                     # Modern Patient Portal SPA (React 19, TypeScript, Vite)
 │   ├── package.json
-│   ├── public/                   # Static icons & SVGs
+│   ├── public/                   # Static icons, datasets & vendor animation libraries
 │   └── src/                      # React views, catalog, API client, stylesheets
-├── og-website/                   # Legacy marketing presentation site
-├── init-scripts/                 # MySQL database schema & dataset initialization (.sql)
-├──  Iryotek Dataset/             # Comprehensive healthcare data, models, & generation scripts
-├── docs/                         # Technical documentation & architecture artifacts
-│   └── architecture/             # Runtime architecture models & interactive diagrams
+├── legacy-website/               # Preserved legacy marketing export
+├── database/                     # Centralized SQL schemas & Docker initialization
+│   ├── init-scripts/             # MySQL container entrypoint initialization (.sql)
+│   └── dataset/                  # Comprehensive healthcare datasets & generation scripts
+├── docs/                         # Technical documentation, diagrams & visual assets
+│   ├── architecture/             # Runtime architecture models & interactive diagrams
+│   └── images/                   # System walkthrough screenshots
 ├── scripts/                      # Operational automation & administrative scripts
-├── _cleanup_review/              # Isolated deprecated assets & duplicates staged for manual review
+├── ._trash_quarantine/           # Isolated deprecated assets & duplicates staged for manual review
 ├── Dockerfile                    # Container build configuration
 ├── docker-compose.yml            # Multi-service stack (MySQL 8 + Tomcat 9)
 └── README.md
@@ -61,37 +64,37 @@ Iryotek-Project/
 ### Home Landing
 The public landing view displays clinic departments, doctor directories, and direct login buttons.
 
-![Iryotek Homepage](img/homepage.png)
+![Iryotek Homepage](docs/images/homepage.png)
 
 ---
 
 ### Patient Workflows
 * **Sign In**: Patient authentication portal.
-  ![Patient Login](img/user_login.png)
+  ![Patient Login](docs/images/user_login.png)
 
 * **Booking a Consultation**: Select a doctor, pick a date, and confirm your queue spot.
-  ![Schedule Appointment](img/user_appointment.png)
+  ![Schedule Appointment](docs/images/user_appointment.png)
 
 ---
 
 ### Doctor Dashboard
 * **Practitioner Sign In**: Login portal for registered medical doctors.
-  ![Doctor Login](img/doctor_login.png)
+  ![Doctor Login](docs/images/doctor_login.png)
 
 ---
 
 ### Admin Portal
 * **Staff Sign In**: Restricted login page for system administrators.
-  ![Admin Login](img/admin_login.png)
+  ![Admin Login](docs/images/admin_login.png)
 
 * **Metrics and Overview**: Real-time counter of registered doctors, users, bookings, specialties, and branches.
-  ![Admin Dashboard](img/admin_dashboard.png)
+  ![Admin Dashboard](docs/images/admin_dashboard.png)
 
 ---
 
 ### Hospital Directory
 * **Branch Locator**: Directory listing hospital branches and affiliated clinics.
-  ![Find Hospital](img/find_hospital.png)
+  ![Find Hospital](docs/images/find_hospital.png)
 
 ---
 
@@ -115,14 +118,14 @@ The public landing view displays clinic departments, doctor directories, and dir
    ```
 3. Load the initial schema and seed records:
    ```bash
-   mysql -u root -p hospital < seed_data.sql
+   mysql -u root -p hospital < database/init-scripts/1_schema.sql
    ```
-   Verify database credentials match `Iryotek/src/main/java/com/hms/db/DBConnect.java` (defaults: `root` / `admin`).
+   Verify database credentials match `backend/src/main/java/com/hms/db/DBConnection.java` (defaults: `root` / `admin`).
 
 ### 3. Build and Run Backend
 Navigate to the backend project directory:
 ```bash
-cd Iryotek
+cd backend
 mvn clean package
 ```
 Deploy `target/Iryotek.war` to your Tomcat `webapps/` folder, or start Jetty on port 8081:
@@ -138,7 +141,7 @@ http://localhost:8081/Iryotek/
 ### 4. Run Frontend Client
 From the repository root:
 ```bash
-cd "new-web main"
+cd frontend
 npm install
 npm run dev
 ```

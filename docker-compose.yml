@@ -1,5 +1,4 @@
 version: '3.8'
-
 services:
   db:
     image: mysql:8.0
@@ -10,7 +9,7 @@ services:
     ports:
       - "3307:3306"
     volumes:
-      - ./init-scripts:/docker-entrypoint-initdb.d
+      - ./database/init-scripts:/docker-entrypoint-initdb.d
     # The healthcheck ensures that the massive 100k+ rows dataset is fully inserted
     # before Docker considers the DB "healthy" and allows the Java App to start.
     healthcheck:
@@ -19,7 +18,6 @@ services:
       timeout: 5s
       retries: 20
       start_period: 30s
-
   app:
     build: .
     restart: unless-stopped

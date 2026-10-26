@@ -1,0 +1,373 @@
+/* ==========================================================================
+   ThreeUI Animated Top Dock (Sable Variant) Stylesheet
+   Faithfully ported from ThreeUI (Source revision: 5a736cd3c1f6f19802f61ebb10e1701b9f7aa26e)
+   ========================================================================== */
+
+/* Root Dock Shell */
+.threeui-dock-shell {
+  position: relative;
+  width: 100%;
+  isolation: isolate;
+}
+
+/* Floating Dock Container */
+.floating-navbar-container {
+  margin-top: -26px;
+  position: relative;
+  z-index: 1000;
+  width: 100%;
+}
+
+/* Sable Dock Navigation Bar (Glass Capsule Dock) */
+.threeui-sable-navbar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 60px;
+  padding: 8px 18px;
+  border-radius: 20px;
+  background: rgba(14, 17, 24, 0.88);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  box-shadow: 0 16px 40px -10px rgba(0, 0, 0, 0.55),
+              inset 0 1px 0 rgba(255, 255, 255, 0.12),
+              0 0 0 1px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  isolation: isolate;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  overflow: visible !important;
+}
+
+.threeui-sable-navbar .navbar-collapse {
+  overflow: visible !important;
+}
+
+/* ThreeUI tactile noise overlay */
+.threeui-sable-navbar::after {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  content: "";
+  opacity: 0.08;
+  border-radius: inherit;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.16'/%3E%3C/svg%3E");
+  mix-blend-mode: soft-light;
+}
+
+.threeui-sable-navbar:hover {
+  border-color: rgba(0, 194, 203, 0.35);
+  box-shadow: 0 20px 45px -8px rgba(0, 0, 0, 0.6),
+              0 0 28px rgba(0, 194, 203, 0.12),
+              inset 0 1px 0 rgba(255, 255, 255, 0.16);
+}
+
+/* Dock Navigation Track - aligns top edge so spring expands and drops downwards */
+.threeui-dock-nav {
+  display: flex !important;
+  align-items: flex-start !important;
+  gap: 8px !important;
+  margin: 0 !important;
+  padding: 3px 0 !important;
+  list-style: none !important;
+  overflow: visible !important;
+  position: relative !important;
+  height: 50px !important;
+  min-height: 50px !important;
+  max-height: 50px !important;
+  isolation: isolate !important;
+}
+
+/* Dock Item (Button/Link) */
+.threeui-dock-item {
+  position: relative;
+  z-index: 6;
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 38px;
+  min-width: 0;
+  padding: 0 15px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  outline: none;
+  color: #a0a6b8;
+  background: rgba(25, 29, 40, 0.72);
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.88rem;
+  font-weight: 500;
+  letter-spacing: 0.015em;
+  text-decoration: none !important;
+  white-space: nowrap;
+  backdrop-filter: blur(14px) saturate(120%);
+  -webkit-backdrop-filter: blur(14px) saturate(120%);
+  transform-origin: 50% 0;
+  box-sizing: border-box;
+  transition: color 0.16s ease, border-color 0.18s ease, background 0.18s ease, box-shadow 0.18s ease;
+  will-change: width, height, transform;
+  cursor: pointer;
+  user-select: none;
+}
+
+/* Dock Item Hover & Proximity Near State */
+.threeui-dock-item[data-dock-near="true"],
+.threeui-dock-item:hover,
+.threeui-dock-item:focus-visible {
+  z-index: 7;
+  color: #ffffff !important;
+  border-color: rgba(0, 194, 203, 0.45);
+  background: rgba(35, 42, 58, 0.88);
+  box-shadow: 0 10px 24px -6px rgba(0, 0, 0, 0.45),
+              0 0 14px rgba(0, 194, 203, 0.22),
+              inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+/* Active / Pressed Item State */
+.threeui-dock-item[aria-pressed="true"],
+.threeui-dock-item.active {
+  color: #ffffff !important;
+  border-color: var(--oreo-cyan) !important;
+  background: linear-gradient(135deg, rgba(0, 194, 203, 0.35) 0%, rgba(0, 168, 176, 0.18) 100%) !important;
+  box-shadow: 0 8px 20px -4px rgba(0, 194, 203, 0.35),
+              inset 0 1px 0 rgba(255, 255, 255, 0.25) !important;
+}
+
+/* Dock Item Icon */
+.threeui-dock-icon {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.95rem;
+  opacity: 0.72;
+  transition: opacity 0.18s ease, transform 0.18s ease, color 0.18s ease;
+}
+
+.threeui-dock-item[data-dock-near="true"] .threeui-dock-icon,
+.threeui-dock-item:hover .threeui-dock-icon,
+.threeui-dock-item:focus-visible .threeui-dock-icon,
+.threeui-dock-item[aria-pressed="true"] .threeui-dock-icon {
+  opacity: 1;
+  transform: scale(1.08);
+}
+
+/* Standout Coral Call-To-Action (Book Appointment) */
+.threeui-dock-cta {
+  background: linear-gradient(135deg, #ff5e3a 0%, #ff7844 100%) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.28) !important;
+  border-radius: 999px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.02em !important;
+  padding: 0 20px !important;
+  box-shadow: 0 8px 24px rgba(255, 94, 58, 0.42),
+              inset 0 1px 0 rgba(255, 255, 255, 0.35) !important;
+}
+
+.threeui-dock-cta:hover,
+.threeui-dock-cta[data-dock-near="true"] {
+  background: linear-gradient(135deg, #ff451d 0%, #ff6b36 100%) !important;
+  box-shadow: 0 12px 30px rgba(255, 94, 58, 0.6),
+              inset 0 1px 0 rgba(255, 255, 255, 0.45) !important;
+  color: #ffffff !important;
+}
+
+/* Dropdown Menu for Blog Item */
+.threeui-dock-item.dropdown-toggle::after {
+  margin-left: 6px;
+  vertical-align: 0.15em;
+  opacity: 0.75;
+}
+
+.threeui-sable-dropdown {
+  background: rgba(14, 18, 26, 0.94) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-radius: 14px !important;
+  padding: 8px !important;
+  margin-top: 10px !important;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.6),
+              inset 0 1px 0 rgba(255, 255, 255, 0.14) !important;
+  backdrop-filter: blur(24px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+}
+
+.threeui-sable-dropdown .dropdown-item {
+  color: #b0b8cb !important;
+  font-family: 'Outfit', sans-serif !important;
+  font-size: 0.88rem !important;
+  font-weight: 500 !important;
+  padding: 10px 14px !important;
+  border-radius: 9px !important;
+  transition: all 0.16s ease !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+.threeui-sable-dropdown .dropdown-item:hover {
+  color: #ffffff !important;
+  background: rgba(0, 194, 203, 0.18) !important;
+  transform: translateX(3px) !important;
+}
+
+/* Dock Search Input */
+.threeui-dock-search-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.threeui-dock-search {
+  background: rgba(25, 29, 40, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  padding: 8px 16px 8px 36px;
+  font-size: 0.84rem;
+  color: #ffffff;
+  width: 175px;
+  outline: none;
+  font-family: 'Outfit', sans-serif;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: width 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+              border-color 0.25s ease,
+              background 0.25s ease,
+              box-shadow 0.25s ease;
+}
+
+.threeui-dock-search::placeholder {
+  color: #7d8498;
+}
+
+.threeui-dock-search:focus {
+  width: 230px;
+  background: rgba(30, 36, 50, 0.95);
+  border-color: var(--oreo-cyan);
+  box-shadow: 0 0 16px rgba(0, 194, 203, 0.28),
+              inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.threeui-dock-search-icon {
+  position: absolute;
+  left: 13px;
+  color: #7d8498;
+  font-size: 0.82rem;
+  pointer-events: none;
+  transition: color 0.2s ease;
+}
+
+.threeui-dock-search:focus + .threeui-dock-search-icon,
+.threeui-dock-search-wrap:hover .threeui-dock-search-icon {
+  color: var(--oreo-cyan);
+}
+
+/* Badge count for Cart */
+.threeui-dock-badge {
+  background: var(--oreo-coral);
+  color: #ffffff;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 999px;
+  margin-left: 2px;
+  line-height: 1;
+}
+
+/* Super Top Bar Utility Micro-Dock */
+.super-top-dock {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 4px;
+  background: rgba(245, 247, 250, 0.95);
+  padding: 3px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.03);
+  overflow: visible !important;
+  position: relative;
+  height: 34px !important;
+  min-height: 34px !important;
+  max-height: 34px !important;
+}
+
+.super-top-dock-item {
+  position: relative;
+  z-index: 6;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  height: 27px;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  color: #555e6d;
+  background: transparent;
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-decoration: none !important;
+  white-space: nowrap;
+  transform-origin: 50% 0;
+  box-sizing: border-box;
+  transition: color 0.16s ease, border-color 0.16s ease, background 0.16s ease, box-shadow 0.16s ease;
+  will-change: width, height, transform;
+  cursor: pointer;
+}
+
+.super-top-dock-item[data-dock-near="true"],
+.super-top-dock-item:hover,
+.super-top-dock-item:focus-visible {
+  color: #111827 !important;
+  background: #ffffff;
+  border-color: rgba(0, 194, 203, 0.35);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.super-top-dock-divider {
+  width: 1px;
+  height: 14px;
+  background: #d8dde5;
+  margin: 0 2px;
+}
+
+/* Mobile & Tablet Adjustments */
+@media (max-width: 991px) {
+  .threeui-sable-navbar {
+    flex-wrap: wrap;
+    padding: 10px 14px;
+    border-radius: 16px;
+  }
+
+  .threeui-dock-nav {
+    flex-wrap: wrap;
+    gap: 6px;
+    width: 100%;
+    height: auto !important;
+    max-height: none !important;
+  }
+
+  .threeui-dock-item {
+    font-size: 0.82rem;
+    padding: 0 10px;
+  }
+
+  .threeui-dock-search-wrap {
+    margin-top: 10px;
+    width: 100%;
+  }
+
+  .threeui-dock-search {
+    width: 100% !important;
+  }
+}
+
+@media (max-width: 600px) {
+  .threeui-dock-item {
+    font-size: 0.76rem;
+    padding: 0 8px;
+  }
+}
+

@@ -1,0 +1,10 @@
+{
+  "description": "Iryotek revolutionizes healthcare with an integrated platform for patients and doctors, offering AI triage, e-prescriptions, and telemedicine services.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}
