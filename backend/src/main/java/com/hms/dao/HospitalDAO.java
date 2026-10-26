@@ -17,7 +17,6 @@ public class HospitalDAO {
 		this.conn = conn;
 	}
 
-	// add hospital
 	public boolean addHospital(Hospital hospital) {
 
 		boolean f = false;
@@ -42,7 +41,6 @@ public class HospitalDAO {
 		return f;
 	}
 
-	// get all hospitals
 	public List<Hospital> getAllHospital() {
 
 		List<Hospital> hospitalList = new ArrayList<Hospital>();
@@ -72,7 +70,6 @@ public class HospitalDAO {
 		return hospitalList;
 	}
 
-	// get hospital by id
 	public Hospital getHospitalById(int id) {
 
 		Hospital hospital = null;
@@ -102,7 +99,6 @@ public class HospitalDAO {
 		return hospital;
 	}
 
-	// get hospitals by city
 	public List<Hospital> getHospitalsByCity(String city) {
 
 		List<Hospital> hospitalList = new ArrayList<Hospital>();
@@ -134,7 +130,6 @@ public class HospitalDAO {
 		return hospitalList;
 	}
 
-	// get all distinct states
 	public List<String> getAllStates() {
 
 		List<String> stateList = new ArrayList<String>();
@@ -156,7 +151,6 @@ public class HospitalDAO {
 		return stateList;
 	}
 
-	// get cities by state
 	public List<String> getCitiesByState(String state) {
 
 		List<String> cityList = new ArrayList<String>();
@@ -180,7 +174,6 @@ public class HospitalDAO {
 		return cityList;
 	}
 
-	// delete hospital by id
 	public boolean deleteHospitalById(int id) {
 
 		boolean f = false;
@@ -201,7 +194,6 @@ public class HospitalDAO {
 		return f;
 	}
 
-	// count total hospitals
 	public int countTotalHospital() {
 
 		int i = 0;
@@ -223,7 +215,6 @@ public class HospitalDAO {
 		return i;
 	}
 
-	// get all distinct states by disease
 	public List<String> getStatesByDisease(String disease) {
 		List<String> stateList = new ArrayList<String>();
 		try {
@@ -240,7 +231,6 @@ public class HospitalDAO {
 		return stateList;
 	}
 
-	// get cities by state and disease
 	public List<String> getCitiesByStateAndDisease(String state, String disease) {
 		List<String> cityList = new ArrayList<String>();
 		try {
@@ -258,7 +248,6 @@ public class HospitalDAO {
 		return cityList;
 	}
 
-	// get hospitals by city and disease
 	public List<Hospital> getHospitalsByCityAndDisease(String city, String disease) {
 		List<Hospital> hospitalList = new ArrayList<Hospital>();
 		Hospital hospital = null;

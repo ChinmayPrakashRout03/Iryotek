@@ -1,4 +1,4 @@
-# Iryotek — Repository File Movement & Transformation Manifest
+# Iryotek: Repository File Movement & Transformation Manifest
 
 **Document Version**: 2.0  
 **Refactoring Date**: October 2026  

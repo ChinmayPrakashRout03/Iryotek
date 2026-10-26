@@ -1,4 +1,4 @@
-# Iryotek — Target Architecture Specification
+# Iryotek: Target Architecture Specification
 
 **Document Version**: 2.0 (Production Blueprint)  
 **Author**: Principal Software Architect  

@@ -67,7 +67,7 @@ public class UserRegisterServlet extends HttpServlet {
 						+ "      "
 						+ "      <p style=\"color: #4a5568; font-size: 16px; line-height: 1.6; margin-bottom: 30px;\">"
 						+ "        Iryotek is your trusted digital healthcare platform, designed to make clinic and hospital visits easier, faster, and more organized. "
-						+ "        You can now securely book appointments, browse hospitals and doctors, receive queue tokens with scheduled time slots, and manage your appointments—all in one place."
+						+ "        You can now securely book appointments, browse hospitals and doctors, receive queue tokens with scheduled time slots, and manage your appointments, all in one place."
 						+ "      </p>"
 						+ "      "
 						+ "      <!-- Key features box -->"

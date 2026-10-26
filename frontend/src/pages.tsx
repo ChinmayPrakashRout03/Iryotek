@@ -221,7 +221,7 @@ export function CarePage() {
     window.scrollTo(0, 0);
     setMenuOpen(false);
     setCurrentUser(getStoredUser());
-    document.title = `Iryotek — ${page.charAt(0).toUpperCase() + page.slice(1)}`;
+    document.title = `Iryotek | ${page.charAt(0).toUpperCase() + page.slice(1)}`;
     const handleAuthChange = () => setCurrentUser(getStoredUser());
     window.addEventListener('iryotek_auth_changed', handleAuthChange);
     return () => { 
@@ -331,9 +331,9 @@ function PatientPage() {
   const profile = user?.patientProfile
   const appointment = state.appointments.find(item => item.status !== 'Cancelled')
   const displayName = user?.displayName || 'Patient'
-  const bp = profile?.bloodPressure ? `${profile.bloodPressure.systolic}/${profile.bloodPressure.diastolic}` : '—'
-  const pulse = profile?.pulseRate ? String(profile.pulseRate) : '—'
-  const bmiOrBlood = profile?.bmi ? String(profile.bmi) : (profile?.bloodGroup || '—')
+  const bp = profile?.bloodPressure ? `${profile.bloodPressure.systolic}/${profile.bloodPressure.diastolic}` : '--'
+  const pulse = profile?.pulseRate ? String(profile.pulseRate) : '--'
+  const bmiOrBlood = profile?.bmi ? String(profile.bmi) : (profile?.bloodGroup || '--')
 
   return (
     <>
@@ -380,8 +380,8 @@ function PatientPage() {
         </Panel>
       </div>
       <div className="demo-metric-grid">
-        <Metric label="BLOOD PRESSURE" value={bp} note={profile?.bloodPressure ? "Recorded baseline" : "Update in profile"} unit={bp !== '—' ? 'mmHg' : undefined} />
-        <Metric label="RESTING PULSE" value={pulse} unit={pulse !== '—' ? 'bpm' : undefined} note={profile?.pulseRate ? "Recorded baseline" : "Update in profile"} />
+        <Metric label="BLOOD PRESSURE" value={bp} note={profile?.bloodPressure ? "Recorded baseline" : "Update in profile"} unit={bp !== '--' ? 'mmHg' : undefined} />
+        <Metric label="RESTING PULSE" value={pulse} unit={pulse !== '--' ? 'bpm' : undefined} note={profile?.pulseRate ? "Recorded baseline" : "Update in profile"} />
         <Metric label={profile?.bmi ? "BODY MASS INDEX" : "BLOOD GROUP"} value={bmiOrBlood} unit={profile?.bmi ? "kg/m²" : undefined} note={profile ? `${profile.gender} · ${profile.age} yrs` : "Update in profile"} />
         <Metric label="UPCOMING VISITS" value={String(state.appointments.filter(item => item.status !== 'Cancelled').length).padStart(2, '0')} note="Your time, respected" />
       </div>
@@ -740,7 +740,6 @@ function AppointmentsPage({ notify }: { notify: (text: string) => void }) {
     maxDate.setDate(maxDate.getDate() + 7)
     return { todayStr: today, maxDateStr: formatDate(maxDate) }
   }, [])
-  // Step 1: State & City Location Selection
   const availableStates = useMemo(() => {
     const list = Array.from(new Set(hospitals.map(h => h.state).filter(Boolean)))
     return list.sort()
@@ -770,7 +769,6 @@ function AppointmentsPage({ notify }: { notify: (text: string) => void }) {
     }
   }, [availableCities, selectedCity])
 
-  // Step 2: Nearby Hospitals in selected state & city
   const nearbyHospitals = useMemo(() => {
     const inCity = hospitals.filter(h => h.state === selectedState && h.city === selectedCity)
     if (inCity.length > 0) return inCity
@@ -790,7 +788,6 @@ function AppointmentsPage({ notify }: { notify: (text: string) => void }) {
     return hospitals.find(h => h.id === selectedHospitalId) || nearbyHospitals[0] || hospitals[0]
   }, [selectedHospitalId, nearbyHospitals])
 
-  // Step 3: Medical Field / Reason for Appointment (Specialty in selected hospital)
   const [fieldCategory, setFieldCategory] = useState<string>('All')
   const [fieldSearch, setFieldSearch] = useState<string>('')
 
@@ -807,7 +804,6 @@ function AppointmentsPage({ notify }: { notify: (text: string) => void }) {
     setSelectedField('All Specialties')
   }, [selectedHospitalId])
 
-  // Step 4: Doctors matching Hospital & chosen Field
   const [docList, setDocList] = useState<ApiDoctor[]>([])
   const [doctor, setDoctor] = useState(params.get('doctor') || '')
 
@@ -2846,9 +2842,9 @@ function RecordsPage({ notify }: { notify: (text: string) => void }) {
   const profile = user?.patientProfile
   const displayName = user?.displayName || 'Registered Patient'
 
-  const bp = profile?.bloodPressure ? `${profile.bloodPressure.systolic}/${profile.bloodPressure.diastolic}` : '—'
-  const pulse = profile?.pulseRate ? String(profile.pulseRate) : '—'
-  const bmi = profile?.bmi ? String(profile.bmi) : (profile?.bloodGroup || '—')
+  const bp = profile?.bloodPressure ? `${profile.bloodPressure.systolic}/${profile.bloodPressure.diastolic}` : '--'
+  const pulse = profile?.pulseRate ? String(profile.pulseRate) : '--'
+  const bmi = profile?.bmi ? String(profile.bmi) : (profile?.bloodGroup || '--')
 
   // Build real records dynamically
   const userRecords: { title: string; type: 'Clinical profile' | 'Consultations' | 'Prescriptions'; date: string; doctor: string; detail: string }[] = []
@@ -2969,8 +2965,8 @@ ${state.appointments.length > 0 ? state.appointments.map(a => `Token #${a.id} | 
         action={<button className="button" onClick={download}>Download summary <span>↓</span></button>}
       />
       <div className="demo-metric-grid three">
-        <Metric label="BLOOD PRESSURE" value={bp} unit={bp !== '—' ? 'mmHg' : undefined} note={profile?.bloodPressure ? "Recorded baseline" : "Pending recording"} />
-        <Metric label="RESTING PULSE" value={pulse} unit={pulse !== '—' ? 'bpm' : undefined} note={profile?.pulseRate ? "Recorded baseline" : "Pending recording"} />
+        <Metric label="BLOOD PRESSURE" value={bp} unit={bp !== '--' ? 'mmHg' : undefined} note={profile?.bloodPressure ? "Recorded baseline" : "Pending recording"} />
+        <Metric label="RESTING PULSE" value={pulse} unit={pulse !== '--' ? 'bpm' : undefined} note={profile?.pulseRate ? "Recorded baseline" : "Pending recording"} />
         <Metric label={profile?.bmi ? "BODY MASS INDEX" : "BLOOD GROUP"} value={bmi} unit={profile?.bmi ? "kg/m²" : undefined} note={profile ? `${profile.gender} · ${profile.age} yrs` : "From intake"} />
       </div>
 
@@ -3316,21 +3312,18 @@ function DoctorPage({ notify }: { notify: (text: string) => void }) {
   const docName = (user?.displayName || user?.fullName || '').toLowerCase().replace(/^(dr\.?|doctor)\s*/i, '').trim()
   const docId = user?.doctorId || (typeof user?.id === 'number' ? user.id : 0)
 
-  // Merge appointments from shared storage, live MySQL backend, and DemoContext
+  // Aggregate appointments from shared storage, backend API, and local state
   const mergedAppointments = useMemo(() => {
     const map = new Map<string, any>()
-    // 1. Shared appointments across user accounts
     getSharedAppointments().forEach(a => {
       if (a && a.id) map.set(String(a.id), a)
     })
-    // 2. Live MySQL database appointments
     backendAppointments.forEach(a => {
       if (a && a.id) {
         const idKey = String(a.id)
         map.set(idKey, { ...map.get(idKey), ...a })
       }
     })
-    // 3. Demo context appointments
     ;(state.appointments || []).forEach(a => {
       if (a && a.id) {
         const idKey = String(a.id)
@@ -3455,7 +3448,7 @@ function DoctorPage({ notify }: { notify: (text: string) => void }) {
         <Metric label="ACCEPTED & CONFIRMED" value={String(approvedCount)} note="Unlocked for consultation" />
         <Metric
           label="CLINICAL SATISFACTION"
-          value={allDoctorQueue.length > 0 ? "98.6" : "—"}
+          value={allDoctorQueue.length > 0 ? "98.6" : "--"}
           unit={allDoctorQueue.length > 0 ? "%" : ""}
           note={allDoctorQueue.length > 0 ? "Average patient feedback" : "No consultations recorded yet"}
         />
@@ -4122,7 +4115,7 @@ function DoctorProfileView({ notify }: { notify: (text: string) => void }) {
       <div className="demo-metric-grid">
         <Metric label="CLINICAL SPECIALTY" value={specialty} note="Primary Board Designation" />
         <Metric label="PRACTICE EXPERIENCE" value={exp} note="Verified Clinical Tenancy" />
-        <Metric label="CONSULTATION TARIFF" value={fee ? `₹${fee}` : '—'} unit={fee ? 'per session' : ''} note="In-Clinic & Video Session" />
+        <Metric label="CONSULTATION TARIFF" value={fee ? `₹${fee}` : '--'} unit={fee ? 'per session' : ''} note="In-Clinic & Video Session" />
         <Metric label="COUNCIL REGISTRATION" value={regNo} note="National Medical Commission (NMC)" />
       </div>
 
@@ -4551,7 +4544,7 @@ function InformationPage({ contact = false }: { contact?: boolean }) {
 export function IntroPage() {
   const navigate = useNavigate(), frame = useRef<HTMLDivElement>(null), [ready, setReady] = useState(false)
   useEffect(() => {
-    document.title = 'Iryotek — A new chapter in care'
+    document.title = 'Iryotek | Care Platform'
     window.scrollTo(0, 0)
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
     const gsap = (window as any).gsap

@@ -54,7 +54,6 @@ public class DoctorDAO {
 		return f;
 	}
 
-	// getAllDoctors list
 	public List<Doctor> getAllDoctor() {
 
 		Doctor doctor = null;
@@ -91,7 +90,6 @@ public class DoctorDAO {
 		return docList;
 	}
 
-	// get doctor by id
 	public Doctor getDoctorById(int id) {
 
 		Doctor doctor = null;
@@ -127,7 +125,6 @@ public class DoctorDAO {
 		return doctor;
 	}
 
-	// update doctors by id
 	public boolean updateDoctor(Doctor doctor) {
 
 		boolean f = false;
@@ -164,7 +161,6 @@ public class DoctorDAO {
 		return f;
 	}
 
-	// delete doctors by id
 	public boolean deleteDoctorById(int id) {
 
 		boolean f = false;
@@ -186,7 +182,6 @@ public class DoctorDAO {
 		return f;
 	}
 
-	// doctor login
 	public Doctor loginDoctor(String email, String password) {
 
 		Doctor doctor = null;
@@ -273,7 +268,6 @@ public class DoctorDAO {
 		return i;
 	}
 
-	// Count total Appointment Number
 	public int countTotalAppointment() {
 
 		int i = 0;
@@ -296,7 +290,6 @@ public class DoctorDAO {
 		return i;
 	}
 
-	// Count total number of Appointment for a specific doctor
 	public int countTotalAppointmentByDoctorId(int doctorId) {
 
 		int i = 0;
@@ -320,7 +313,6 @@ public class DoctorDAO {
 		return i;
 	}
 
-	// Count total User Number
 	public int countTotalUser() {
 
 		int i = 0;
@@ -343,7 +335,6 @@ public class DoctorDAO {
 		return i;
 	}
 
-	// Count total Specialist Number
 	public int countTotalSpecialist() {
 
 		int i = 0;
@@ -366,7 +357,6 @@ public class DoctorDAO {
 		return i;
 	}
 
-	// check old password
 	public boolean checkOldPassword(int doctorId, String oldPassword) {
 
 		boolean f = false;
@@ -416,7 +406,6 @@ public class DoctorDAO {
 		return f;
 	}
 
-	// change password
 	public boolean changePassword(int doctorId, String newPassword) {
 
 		boolean f = false;
@@ -440,7 +429,6 @@ public class DoctorDAO {
 		return f;
 	}
 
-	// edit doctor profile in doctor panel edit profile
 	public boolean editDoctorProfile(Doctor doctor) {
 
 		boolean f = false;
@@ -470,7 +458,6 @@ public class DoctorDAO {
 		return f;
 	}
 
-	// get doctors by hospital id
 	public List<Doctor> getDoctorsByHospitalId(int hospitalId) {
 
 		Doctor doctor = null;

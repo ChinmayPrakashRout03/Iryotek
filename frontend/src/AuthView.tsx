@@ -40,10 +40,8 @@ export default function AuthView({ initialMode = 'signin', notify, onSuccess }: 
   const [authTab, setAuthTab] = useState<'signin' | 'signup'>(initialMode)
   const [patientMethod, setPatientMethod] = useState<'email' | 'phone'>('email')
 
-  // Patient Sign Up Wizard Step (1: Account, 2: Demographics & Emergency, 3: Vitals, 4: Clinical History)
   const [signupStep, setSignupStep] = useState<1 | 2 | 3 | 4>(1)
 
-  // Step 1: Account
   const [patientName, setPatientName] = useState('')
   const [patientEmail, setPatientEmail] = useState('')
   const [patientPassword, setPatientPassword] = useState('')
@@ -52,7 +50,6 @@ export default function AuthView({ initialMode = 'signin', notify, onSuccess }: 
   const [confirmationResult, setConfirmationResult] = useState<any>(null)
   const [otpSent, setOtpSent] = useState(false)
 
-  // Step 2: Demographics & Emergency Contact
   const [patientAge, setPatientAge] = useState<number | ''>('')
   const [patientDob, setPatientDob] = useState('')
   const [patientGender, setPatientGender] = useState<'Male' | 'Female' | 'Other' | 'Prefer not to say'>('Male')
@@ -64,14 +61,12 @@ export default function AuthView({ initialMode = 'signin', notify, onSuccess }: 
   const [emergencyRel, setEmergencyRel] = useState('Parent / Guardian')
   const [emergencyPhone, setEmergencyPhone] = useState('')
 
-  // Step 3: Baseline Physical & Vitals
   const [heightCm, setHeightCm] = useState<number | ''>('')
   const [weightKg, setWeightKg] = useState<number | ''>('')
   const [bpSystolic, setBpSystolic] = useState<number | ''>(120)
   const [bpDiastolic, setBpDiastolic] = useState<number | ''>(80)
   const [pulseRate, setPulseRate] = useState<number | ''>(72)
 
-  // Live BMI calculation
   const calculatedBmi = useMemo(() => {
     if (typeof heightCm === 'number' && heightCm > 0 && typeof weightKg === 'number' && weightKg > 0) {
       const hMeter = heightCm / 100
@@ -89,7 +84,6 @@ export default function AuthView({ initialMode = 'signin', notify, onSuccess }: 
     return { label: 'Obese', color: '#dc2626' }
   }, [calculatedBmi])
 
-  // Step 4: Clinical History & Previous Medical Details
   const [selectedAllergies, setSelectedAllergies] = useState<string[]>([])
   const [customAllergy, setCustomAllergy] = useState('')
   const [selectedConditions, setSelectedConditions] = useState<string[]>([])
@@ -100,9 +94,7 @@ export default function AuthView({ initialMode = 'signin', notify, onSuccess }: 
   const [insuranceProvider, setInsuranceProvider] = useState('')
   const [insurancePolicy, setInsurancePolicy] = useState('')
 
-  // Quick allergy pills
   const commonAllergies = ['Penicillin', 'Sulfa Drugs', 'Aspirin / NSAIDs', 'Peanuts', 'Shellfish', 'Latex', 'Dust / Pollen', 'No Known Drug Allergies']
-  // Quick condition pills
   const commonConditions = ['Hypertension', 'Type 2 Diabetes', 'Asthma', 'Hypothyroidism', 'Coronary Artery Disease', 'GERD / Acid Reflux', 'None']
 
   const toggleAllergy = (allergy: string) => {
@@ -141,7 +133,6 @@ export default function AuthView({ initialMode = 'signin', notify, onSuccess }: 
     }
   }
 
-  // Doctor Fields
   const [docEmail, setDocEmail] = useState('')
   const [docPassword, setDocPassword] = useState('doctor123')
   const [docFirstName, setDocFirstName] = useState('')
@@ -153,11 +144,9 @@ export default function AuthView({ initialMode = 'signin', notify, onSuccess }: 
   const [docHospital, setDocHospital] = useState('AIIMS New Delhi')
   const [issuedResult, setIssuedResult] = useState<{ email: string; pass: string; name: string } | null>(null)
 
-  // Admin Fields
   const [adminEmail, setAdminEmail] = useState('admin@gmail.com')
   const [adminPassword, setAdminPassword] = useState('admin')
 
-  // UI state
   const [loading, setLoading] = useState(false)
   const [errorMsg, setErrorMsg] = useState('')
   const [successMsg, setSuccessMsg] = useState('')
@@ -173,7 +162,6 @@ export default function AuthView({ initialMode = 'signin', notify, onSuccess }: 
     if (notify) notify(msg)
   }
 
-  // Handle successful login
   const completeAuth = (user: AuthUser) => {
     alertUser(`Welcome, ${user.displayName}! Signed in as ${user.role}.`, false)
     if (onSuccess) onSuccess(user)
@@ -245,7 +233,6 @@ export default function AuthView({ initialMode = 'signin', notify, onSuccess }: 
     }
   }
 
-  // Step Nav Validation
   const validateStep1 = () => {
     if (!patientName.trim()) { alertUser('Please enter your full legal name.', true); return false }
     if (!patientEmail.trim() || !patientEmail.includes('@')) { alertUser('Please enter a valid email address.', true); return false }

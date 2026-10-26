@@ -44,7 +44,7 @@ export async function savePatientProfileFirestore(uid: string, profile: PatientH
   const cleanPhone = cleanPhoneNumber(phone)
   const normalizedEmail = (profile.email || '').trim().toLowerCase()
 
-  // 1. ALWAYS persist locally so that user details are NEVER lost on logout or if Firestore is offline
+  // Persist locally for offline resilience and fast session restore
   try {
     if (typeof localStorage !== 'undefined') {
       if (uid) {
@@ -75,7 +75,7 @@ export async function savePatientProfileFirestore(uid: string, profile: PatientH
     console.warn('[Iryotek Persistence] Local profile backup error:', err)
   }
 
-  // 2. Sync to Cloud Firestore if connected
+  // Sync to remote Firestore when available
   const db = getFirestoreDb()
   if (!db || !uid) {
     return true
@@ -120,7 +120,7 @@ export async function findPatientProfileByPhoneFirestore(phone: string): Promise
   const clean = cleanPhoneNumber(phone)
   if (!clean || clean.length < 10) return null
 
-  // 1. Check local persistent reverse index
+  // Check local index first
   if (typeof localStorage !== 'undefined') {
     try {
       const phoneMap = JSON.parse(localStorage.getItem('iryotek_registered_phones') || '{}')
@@ -162,7 +162,7 @@ export async function findPatientProfileByPhoneFirestore(phone: string): Promise
     }
   }
 
-  // 2. Check Cloud Firestore
+  // Query Firestore if locally unmatched
   const db = getFirestoreDb()
   if (db) {
     try {
@@ -196,7 +196,7 @@ export async function findPatientProfileByPhoneFirestore(phone: string): Promise
 export async function getPatientProfileFirestore(uid: string, email?: string): Promise<PatientHealthProfile | null> {
   let profile: PatientHealthProfile | null = null
 
-  // 1. Try Cloud Firestore
+  // Fetch remote document
   const db = getFirestoreDb()
   if (db && uid) {
     try {
@@ -209,7 +209,7 @@ export async function getPatientProfileFirestore(uid: string, email?: string): P
     }
   }
 
-  // 2. If not found in Cloud, restore immediately from persistent local registry
+  // Fallback to local storage if cloud record is unavailable
   if (!profile && typeof localStorage !== 'undefined') {
     try {
       if (uid) {
@@ -282,10 +282,8 @@ export async function saveAppointmentFirestore(uid: string, appointment: {
       createdAt: window.firebase?.firestore?.FieldValue?.serverTimestamp() || new Date().toISOString()
     }
 
-    // 1. Patient personal subcollection
+    // Save to patient collection and global appointment queue
     const patientApptRef = await db.collection('patients').doc(uid).collection('appointments').add(apptData)
-    
-    // 2. Clinician global queue
     await db.collection('appointments').doc(patientApptRef.id).set({
       ...apptData,
       id: patientApptRef.id

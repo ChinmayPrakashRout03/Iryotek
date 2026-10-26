@@ -1,4 +1,4 @@
-# Iryotek — System Architecture Blueprint
+# Iryotek: System Architecture Blueprint
 
 **Version**: 2.0 (Production Reference)  
 **Classification**: Enterprise Technical Architecture  

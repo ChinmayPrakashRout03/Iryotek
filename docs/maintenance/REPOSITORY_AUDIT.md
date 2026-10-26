@@ -1,8 +1,8 @@
-# Iryotek — Repository Audit & Discovery Report
+# Iryotek: Repository Audit & Discovery Report
 
 **Audit Date**: October 2026  
 **Auditor**: Principal Software Architect & Repository Maintenance Specialist  
-**Project**: Iryotek — AI-Powered Smart Healthcare Management Platform  
+**Project**: Iryotek: AI-Powered Smart Healthcare Management Platform  
 **Target Repository**: `/Users/chinmayprakashrout/Iryotek-Project`  
 **Git Branch**: `chore/project-restructure-backup`  
 

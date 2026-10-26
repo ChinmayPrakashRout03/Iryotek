@@ -168,7 +168,6 @@ public class AppointmentDAO {
 		return result;
 	}
 
-	//for create appointment
 	public boolean addAppointment(Appointment appointment) {
 		boolean f = false;
 		synchronized (AppointmentDAO.class) {
