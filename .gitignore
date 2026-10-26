@@ -17,6 +17,7 @@ target/
 # Environment and secrets
 .env
 .env.*
+!.env.example
 *.env
 .env.local
 .env.production
