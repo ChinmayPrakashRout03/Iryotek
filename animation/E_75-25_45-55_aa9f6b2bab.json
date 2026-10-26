@@ -1,0 +1,173 @@
+{
+  "settings": {
+    "mode": "e",
+    "duration": 6.0,
+    "draw_percent": 75.0,
+    "ink_percent": 45.0,
+    "width": 1280,
+    "height": 720,
+    "fit": "original",
+    "fps": 30,
+    "paper_color": "#ffffff",
+    "device": "cpu",
+    "encoder": "cpu",
+    "quality": 26,
+    "encoder_preset": "p4",
+    "cpu_preset": "ultrafast",
+    "render_batch_size": 2,
+    "seed": 42,
+    "subject_first": false,
+    "subject_resolution": 1024,
+    "subject_threshold": 0.5,
+    "clean_ink": true,
+    "grid_edge": 10,
+    "adaptive_block": 15,
+    "adaptive_c": 10.0,
+    "clahe_clip": 2.0,
+    "palette_colors": 16,
+    "min_region_area": 80,
+    "saturation": 1.0,
+    "brush_ratio": 0.12,
+    "brush_min": 24.0,
+    "brush_max": 92.0,
+    "stroke_angle": 12.0,
+    "travel_speed_ratio": 1.5,
+    "path_samples": 4097,
+    "show_hand": true,
+    "hand_scale": 1.0,
+    "wrist_degrees": 11.0,
+    "wrist_frequency": 0.55,
+    "finger_motion": 1.0,
+    "shadow_strength": 1.0,
+    "draw_tip_x": 0,
+    "draw_tip_y": 0,
+    "color_tip_x": 0,
+    "color_tip_y": 0,
+    "rig_json": "{}",
+    "ink_json": "{}"
+  },
+  "device": "cpu",
+  "encoder": "cpu",
+  "width": 1280,
+  "height": 714,
+  "fps": 30,
+  "frames": 180,
+  "duration": 6.0,
+  "phase_seconds": {
+    "draw": 2.0249999463558197,
+    "color": 2.4750000536441803,
+    "hold": 1.5
+  },
+  "hand_frames": {
+    "draw": 61,
+    "color": 73
+  },
+  "plan_cache_hit": false,
+  "wall_seconds": 4.5344274590006535,
+  "bytes": 1660710,
+  "plan": {
+    "version": "v181e-subject-native-background-clusters-1",
+    "grid_cells": 2175,
+    "palette_regions": 62,
+    "subject_pixels": 0,
+    "cluster_backend": "opencv-cpu",
+    "cluster_requested_backend": "cpu",
+    "cluster_seed": 42,
+    "cluster_selected_backend": "opencv-cpu",
+    "cluster_fast_path": "",
+    "cluster_dtype": "float32",
+    "cluster_pixels": 913920,
+    "cluster_colors": 16,
+    "cluster_attempts": 3,
+    "cluster_max_iter": 10,
+    "cluster_epsilon": 1.0,
+    "cluster_initialization": "kmeans++ / 3 D2 trials",
+    "cluster_centers": [
+      [
+        255.8272705078125,
+        127.98609161376953,
+        127.9998550415039
+      ],
+      [
+        40.59884262084961,
+        121.6288070678711,
+        125.98422241210938
+      ],
+      [
+        159.53346252441406,
+        95.63920593261719,
+        118.38418579101562
+      ],
+      [
+        4.988189697265625,
+        126.8833236694336,
+        127.38381958007812
+      ],
+      [
+        96.73399353027344,
+        119.44280242919922,
+        125.0195541381836
+      ],
+      [
+        183.5408477783203,
+        110.24920654296875,
+        97.39415740966797
+      ],
+      [
+        213.58831787109375,
+        140.6321258544922,
+        147.19619750976562
+      ],
+      [
+        159.71585083007812,
+        81.0623779296875,
+        140.3447723388672
+      ],
+      [
+        128.3351287841797,
+        127.48209381103516,
+        127.78060150146484
+      ],
+      [
+        215.61326599121094,
+        124.42212677001953,
+        127.68716430664062
+      ],
+      [
+        129.35165405273438,
+        106.84371185302734,
+        115.96296691894531
+      ],
+      [
+        64.8559341430664,
+        121.93177795410156,
+        122.78431701660156
+      ],
+      [
+        242.49960327148438,
+        125.39488220214844,
+        126.67706298828125
+      ],
+      [
+        185.33131408691406,
+        127.58584594726562,
+        128.41656494140625
+      ],
+      [
+        19.68227767944336,
+        122.90039825439453,
+        126.64362335205078
+      ],
+      [
+        157.32481384277344,
+        127.84432220458984,
+        128.05764770507812
+      ]
+    ],
+    "cluster_fallback_reason": "",
+    "cluster_compactness": 8170620.836890161,
+    "brush_strokes": 79,
+    "travel_pixels": 10126.481092591508,
+    "greedy_travel_pixels": 11023.276183406822
+  }
+}
