@@ -25,3 +25,18 @@ target/
 # Large files (>100MB blocked by GitHub)
 # (Raw medicines.csv is 229MB; medicines.csv.gz is 16MB and uploaded)
  Iryotek Dataset/medicines.csv
+
+# Node & Frontend Build
+node_modules/
+dist/
+.vite/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Logs
+*.log
+
+# Cleanup & Staging Review
+_cleanup_review/

@@ -1,113 +1,145 @@
-# Iryotek — Advanced Doctor-Patient Portal & Clinic Queue System
+# Iryotek: Doctor-Patient Portal and Clinic Queue System
 
-**Iryotek** is a responsive, feature-rich Java Web application designed to streamline clinic workflows, improve the patient scheduling experience, and provide robust healthcare management tools. 
+Iryotek is a hospital management web application built for clinic queues, patient appointments, and medical record keeping across three roles: patients, doctors, and clinic administrators.
 
-The application features a modern, clean clinical-green interface, customized typography, and is structured around three primary user roles: Patients, Doctors, and Administrators.
-
----
-
-## Key Features
-
-* **Smart Appointment Booking**: Patients can easily locate available doctors, choose appointment dates, and book consultations.
-* **Collision-Free Queue Allocation**: Features a synchronized booking mechanism that automatically generates sequential queue token numbers and assigns precise 15-minute time slots (starting at 09:00 AM) to prevent scheduling conflicts.
-* **Instant Booking Modal**: A confirmation modal pops up immediately upon successful booking to show the patient their queue token and time slot.
-* **Role-Based Portals**: Secure, dedicated login environments for Patients, Doctors, and Administrators.
-* **Prescription & Remarks Logging**: Doctors can review scheduled appointments, input treatment remarks, diagnostic info, and prescriptions directly into patient records.
-* **Centralized Hospital Management**: Administrators can add and manage hospital branches, specialists, configure medical departments, onboard doctors, and monitor all appointments.
+The system pairs a Java servlet and JSP backend with a modern React and Vite patient interface alongside server-rendered JSP dashboards.
 
 ---
 
-## Technology Stack
+## Core Features
 
-* **Backend**: Java 8 (Servlets, JSP, JSTL, JDBC Connection Pooling)
-* **Frontend**: HTML5, CSS3, Bootstrap 5, FontAwesome (Clinical-green custom color theme)
-* **Database**: MySQL 8.x
-* **Build & Dependency Management**: Maven
-* **Web Container**: Apache Tomcat 9.x
+* **Appointment Booking**: Patients search by department, pick a doctor and date, and reserve a visit.
+* **Queue Token and Slot Generation**: The backend assigns consecutive token numbers and calculates 15-minute consultation slots starting at 09:00 AM on each clinic day.
+* **Confirmation Popups**: Successful reservations immediately return the assigned token number and visit time.
+* **Role-Based Portals**: Dedicated authentication flows and permission-gated sessions for patients, doctors, and administrative staff.
+* **Doctor Records**: Doctors inspect their daily appointment queue and submit clinical notes, diagnoses, and prescriptions into the patient record.
+* **Clinic Administration**: Admins manage hospital branches, create medical specialties, onboard practitioners, and audit system-wide appointments.
 
 ---
 
-## Screenshot Walkthrough
+## Architecture and Tech Stack
 
-### 🏠 Homepage
-The main landing page for Iryotek showing clinical service options, quick navigation headers, and entry points for patients, doctors, and admins.
+* **Backend**: Java 8 Servlets, JSP, JSTL, and JDBC connection pooling via MySQL Connector/J.
+* **Frontend**:
+  * Single Page Application: React, TypeScript, and Vite.
+  * Server-Side Views: JSP, Bootstrap 5, and FontAwesome.
+* **Database**: MySQL 8.x (`hospital` schema).
+* **Build Tools**: Maven for the Java servlet WAR package; npm for the Vite client.
+* **Application Server**: Apache Tomcat 9 or Eclipse Jetty.
+
+---
+
+## Project Structure
+
+```text
+Iryotek-Project/
+├── Iryotek/                      # Java Servlet 3.1 & JSP backend (Maven WAR)
+│   ├── pom.xml
+│   └── src/main/
+│       ├── java/com/hms/         # Controllers, DAO, Entity, Util, WebSocket
+│       └── webapp/               # JSP templates, static assets (css, js, img)
+├── new-web main/                 # Modern Patient Portal SPA (React 19, TypeScript, Vite)
+│   ├── package.json
+│   ├── public/                   # Static icons & SVGs
+│   └── src/                      # React views, catalog, API client, stylesheets
+├── og-website/                   # Legacy marketing presentation site
+├── init-scripts/                 # MySQL database schema & dataset initialization (.sql)
+├──  Iryotek Dataset/             # Comprehensive healthcare data, models, & generation scripts
+├── docs/                         # Technical documentation & architecture artifacts
+│   └── architecture/             # Runtime architecture models & interactive diagrams
+├── scripts/                      # Operational automation & administrative scripts
+├── _cleanup_review/              # Isolated deprecated assets & duplicates staged for manual review
+├── Dockerfile                    # Container build configuration
+├── docker-compose.yml            # Multi-service stack (MySQL 8 + Tomcat 9)
+└── README.md
+```
+
+---
+
+## System Walkthrough
+
+### Home Landing
+The public landing view displays clinic departments, doctor directories, and direct login buttons.
 
 ![Iryotek Homepage](img/homepage.png)
 
 ---
 
-### 👤 Patient Experience
-* **Login & Authentication**: Secure sign-in portal for patients.
+### Patient Workflows
+* **Sign In**: Patient authentication portal.
   ![Patient Login](img/user_login.png)
 
-* **Scheduling an Appointment**: Patient appointment scheduling interface.
+* **Booking a Consultation**: Select a doctor, pick a date, and confirm your queue spot.
   ![Schedule Appointment](img/user_appointment.png)
 
 ---
 
-### 🥼 Doctor Portal
-* **Doctor Sign-In**: Dedicated login portal for registered medical practitioners.
+### Doctor Dashboard
+* **Practitioner Sign In**: Login portal for registered medical doctors.
   ![Doctor Login](img/doctor_login.png)
 
 ---
 
-### 📊 Administrative Dashboard
-* **Admin Authentication**: Secure entry point for portal managers.
+### Admin Portal
+* **Staff Sign In**: Restricted login page for system administrators.
   ![Admin Login](img/admin_login.png)
 
-* **Admin Control Center**: Key metrics tracker showing total doctors, users, scheduled appointments, configured specialties, and branches.
+* **Metrics and Overview**: Real-time counter of registered doctors, users, bookings, specialties, and branches.
   ![Admin Dashboard](img/admin_dashboard.png)
 
 ---
 
-### 🏥 Hospital Finder
-* **Branch Directory**: A public or patient-accessible directory listing branches, clinics, and affiliated hospitals.
+### Hospital Directory
+* **Branch Locator**: Directory listing hospital branches and affiliated clinics.
   ![Find Hospital](img/find_hospital.png)
 
 ---
 
-## Local Setup & Installation
+## Setup and Local Development
 
-### 1. Prerequisites
-Before setting up the project locally, ensure you have installed:
-* **Java Development Kit (JDK) 8** or higher
-* **Apache Tomcat 9.x**
-* **MySQL Server** (ensure the MySQL service is active)
-* **Apache Maven**
+### 1. Requirements
+* JDK 8 or higher
+* MySQL 8.x server
+* Apache Maven 3.6+
+* Node.js 18+ and npm (for the React client)
+* Apache Tomcat 9.x or Eclipse Jetty runner
 
-### 2. Database Setup
-1. Open your terminal and connect to your MySQL instance:
+### 2. Database Configuration
+1. Log in to MySQL:
    ```bash
    mysql -u root -p
    ```
-2. Create the target database:
+2. Create the database:
    ```sql
    CREATE DATABASE hospital;
    ```
-3. Import the database schema and seed data to populate initial entries (specialists, hospitals, and doctor accounts):
+3. Load the initial schema and seed records:
    ```bash
    mysql -u root -p hospital < seed_data.sql
    ```
+   Verify database credentials match `Iryotek/src/main/java/com/hms/db/DBConnect.java` (defaults: `root` / `admin`).
 
-### 3. Build the Application
-Use Maven to clean the directory, resolve dependencies, and compile the project into a Web Archive (WAR) package:
-1. Navigate to the core project directory:
-   ```bash
-   cd Iryotek
-   ```
-2. Build the package:
-   ```bash
-   mvn clean package
-   ```
-   This compiles the project and generates `Iryotek.war` inside the `target/` directory.
+### 3. Build and Run Backend
+Navigate to the backend project directory:
+```bash
+cd Iryotek
+mvn clean package
+```
+Deploy `target/Iryotek.war` to your Tomcat `webapps/` folder, or start Jetty on port 8081:
+```bash
+mvn jetty:run -Djetty.http.port=8081
+```
 
-### 4. Deploy to Tomcat
-1. Copy the generated `Iryotek.war` file to your Tomcat container's `webapps/` folder:
-   ```bash
-   cp target/Iryotek.war /path/to/tomcat/webapps/
-   ```
-2. Start or restart your Tomcat server. Tomcat will automatically extract the archive and serve it.
-3. Access the application in your browser:
-   ```
-   http://localhost:8080/Iryotek/
-   ```
+Backend will be accessible at:
+```
+http://localhost:8081/Iryotek/
+```
+
+### 4. Run Frontend Client
+From the repository root:
+```bash
+cd "new-web main"
+npm install
+npm run dev
+```
+The React client runs at `http://localhost:8443` and proxies API calls to the servlet backend on port 8081.
