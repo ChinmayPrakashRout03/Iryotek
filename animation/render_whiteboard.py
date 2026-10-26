@@ -46,20 +46,25 @@ def generate_animation(image_path: str, output_dir: str = None, duration: float 
 
     print(f"Rendering whiteboard animation from: {img_path.name} ({img_rgb.shape[1]}x{img_rgb.shape[0]})")
     settings = Settings(
-        mode='e',
+        mode='d',
         duration=duration,
-        draw_percent=75.0,
-        ink_percent=45.0,
-        width=1280,
-        height=720,
+        draw_percent=85.0,
+        ink_percent=50.0,
+        width=1920,
+        height=1080,
         fps=fps,
         device='cpu',
         encoder='cpu',
         cpu_preset='fast',
-        quality=26,
+        quality=20,
         subject_first=False,
         show_hand=True,
-        paper_color='#ffffff'
+        clean_ink=True,
+        paper_color='#ffffff',
+        wrist_degrees=12.0,
+        wrist_frequency=0.6,
+        finger_motion=1.2,
+        shadow_strength=1.1
     )
 
     def progress(fraction, desc):
@@ -74,7 +79,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Generate a whiteboard drawing animation from any illustration")
     parser.add_argument("--image", default=str(Path(__file__).resolve().parent / "source_illustration.jpg"), help="Path to input image")
     parser.add_argument("--output", default=str(Path(__file__).resolve().parent), help="Output directory")
-    parser.add_argument("--duration", type=float, default=6.0, help="Duration in seconds")
+    parser.add_argument("--duration", type=float, default=30.0, help="Duration in seconds (default: 30.0)")
     parser.add_argument("--fps", type=int, default=30, help="Frames per second")
     args = parser.parse_args()
 
