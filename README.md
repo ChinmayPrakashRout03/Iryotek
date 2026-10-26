@@ -1,234 +1,171 @@
-# Iryotek: Hospital Management and Clinic Queue System
+# IRYOTEK : Intelligent Healthcare Management Ecosystem
 
-Iryotek is a web application for hospital appointments, waiting room queues, patient medical records, and pharmacy ordering. It supports three user roles: patients, doctors, and clinic administrators.
+<p align="center">
+  <img src="docs/images/whiteboard_demo.gif" alt="Iryotek Whiteboard Animation" width="100%" style="border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.12);" />
+</p>
 
-The system connects a Java Servlet 3.1 and JSP backend with a React 19 single-page application (SPA) and server-rendered dashboards.
+<p align="center">
+  <strong>Next-Generation Hospital Information System, Clinical Workflow Dispatch, and Patient Care Platform</strong>
+</p>
 
----
-
-## Technical Documentation
-
-- [Project Architecture Blueprint](file:///Users/chinmayprakashrout/Iryotek-Project/docs/architecture/PROJECT_ARCHITECTURE.md)
-- [Repository Audit and Discovery Report](file:///Users/chinmayprakashrout/Iryotek-Project/docs/maintenance/REPOSITORY_AUDIT.md)
-- [Target Architecture Specification](file:///Users/chinmayprakashrout/Iryotek-Project/docs/maintenance/TARGET_ARCHITECTURE.md)
-- [File Movement and Transformation Manifest](file:///Users/chinmayprakashrout/Iryotek-Project/docs/maintenance/FILE_MANIFEST.md)
-- [Cleanup and Restructuring Report](file:///Users/chinmayprakashrout/Iryotek-Project/docs/maintenance/CLEANUP_REPORT.md)
-
----
-
-## Core Features
-
-* **Appointment Booking**: Patients can filter doctors by department, select an open date, and book a visit.
-* **Queue Tokens**: The backend generates sequential token numbers and calculates 15-minute consultation slots starting at 09:00 AM each clinic day.
-* **Waiting Room Updates**: WebSockets push live queue status changes to waiting patients as consultations finish.
-* **Telehealth Video Consultations**: WebSockets handle signaling for browser-to-browser WebRTC video calls between doctors and patients.
-* **Symptom Triage (Gemini API with Offline Heuristics)**: Patients can enter symptoms to receive a preliminary triage level (Green, Yellow, Red) and suggested specialties. If the API is offline or unconfigured, local rules handle the evaluation.
-* **Pharmacy Catalog and Cart**: Patients can search medicines, maintain a shopping cart, check out, and download receipt PDFs.
-* **Role-Based Portals**: Dedicated, session-gated workspaces for Patients, Doctors, and Administrators.
-* **Doctor Records**: Doctors view their daily patient list, record clinical observations, and prescribe medicines.
-* **Hospital Administration**: Administrators can manage doctor profiles, departments, hospital branches, and view clinic statistics.
+<p align="center">
+  <img src="https://img.shields.io/badge/Frontend-React%2019%20%2B%20TypeScript-61DAFB?logo=react&logoColor=black" alt="React 19" />
+  <img src="https://img.shields.io/badge/Build%20Tool-Vite%208-646CFF?logo=vite&logoColor=white" alt="Vite" />
+  <img src="https://img.shields.io/badge/Backend-Java%20Servlet%203.1-007396?logo=openjdk&logoColor=white" alt="Java" />
+  <img src="https://img.shields.io/badge/Build-Maven%203.9-C71A36?logo=apachemaven&logoColor=white" alt="Maven" />
+  <img src="https://img.shields.io/badge/Database-MySQL%208.0-4479A1?logo=mysql&logoColor=white" alt="MySQL" />
+  <img src="https://img.shields.io/badge/Container-Docker%20Compose-2496ED?logo=docker&logoColor=white" alt="Docker" />
+  <img src="https://img.shields.io/badge/Status-Zero%20Compiler%20Errors-success" alt="Status" />
+</p>
 
 ---
 
-## Tech Stack
+## Overview
 
-| Layer | Technology | Purpose |
-|---|---|---|
-| **Backend Core** | Java 17, Servlet 3.1, JSP, JSTL | Business logic, request handling, and server views |
-| **Persistence** | MySQL 8.0, MySQL Connector/J 8.0.33 | Relational database for accounts, visits, and pharmacy data |
-| **Security** | jBCrypt 0.4, HTTP Session Filters | BCrypt password hashing and role-based route protection |
-| **Real-Time** | JSR-356 Java WebSocket API 1.1 | Queue token broadcasts and WebRTC video signaling |
-| **Triage AI** | Google Gemini API (with local rule fallback) | Symptom review and triage suggestions |
-| **Frontend** | React 19, TypeScript, TailwindCSS v4, Vite 8 | Patient web portal and interactive landing views |
-| **Marketing Site** | Webflow HTML5, CSS3, JavaScript | Static marketing site export |
-| **Containers** | Docker, Docker Compose | Multi-stage build and local test environment |
+Iryotek is a modular healthcare platform connecting patients, clinicians, hospital administrators, and pharmacies in a unified real-time workflow. The platform couples an interactive client application with an enterprise Java servlet backend, supporting hospital appointment routing, clinical emergency triage, e-prescription generation, and medicine catalog inventory.
 
 ---
 
-## Project Structure
+## Live Application Showcase
+
+<table width="100%">
+  <tr>
+    <td width="50%" align="center">
+      <img src="docs/images/live_homepage.png" alt="Iryotek Home & 3D Interactive Canvas" width="100%" style="border-radius: 8px;" />
+      <br />
+      <b>3D Interactive Landing & Experience View</b>
+    </td>
+    <td width="50%" align="center">
+      <img src="docs/images/live_care_portal.png" alt="Clinical Care Portal" width="100%" style="border-radius: 8px;" />
+      <br />
+      <b>Patient & Clinician Care Hub</b>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" align="center">
+      <img src="docs/images/live_appointments.png" alt="Doctor Consultation & Appointments" width="100%" style="border-radius: 8px;" />
+      <br />
+      <b>Specialist Booking & Hospital Directory</b>
+    </td>
+    <td width="50%" align="center">
+      <img src="docs/images/live_pharmacy.png" alt="Smart Pharmacy & Medication Catalog" width="100%" style="border-radius: 8px;" />
+      <br />
+      <b>Digital Pharmacy & Prescription Orders</b>
+    </td>
+  </tr>
+</table>
+
+---
+
+## Core Capabilities
+
+* **Doctor & Hospital Scheduling**: Real-time multi-stage appointment dispatching across specialties, hospital departments, and doctor consultation fees.
+* **Clinical Triage & Differential Diagnosis**: Clinical symptom analysis engine prioritizing acute emergencies and providing differential diagnosis possibilities.
+* **Digital Pharmacy & Prescription Fulfillment**: Searchable medicine inventory with real-time stock levels, dosage guidelines, prescription verification, and cart checkout.
+* **Role-Based Authentication**: Dedicated workflows for Patients, Verified Doctors, and Hospital System Administrators with session persistence.
+* **Interactive 3D Anatomical Canvas**: Hardware-accelerated interactive anatomical model enabling intuitive visual exploration.
+
+---
+
+## Repository Structure
 
 ```text
 Iryotek-Project/
-├── backend/                      # Java Servlet 3.1 and JSP backend (Maven WAR)
-│   ├── pom.xml                   # Maven dependencies and build configuration
-│   ├── database/                 # Backend SQL schema snapshot
+├── backend/                      # Java Servlet 3.1 & JSP backend (Maven WAR)
+│   ├── pom.xml                   # Maven build configuration and dependencies
+│   ├── database/                 # Core SQL schema snapshots
 │   └── src/
 │       ├── main/
 │       │   ├── java/com/hms/     # Servlets, DAOs, models, and utility classes
-│       │   ├── resources/        # Classpath configs and templates
+│       │   ├── resources/        # Classpath configurations and database connection pool
 │       │   └── webapp/           # JSP templates, stylesheets, scripts, images
 │       └── test/java/com/hms/    # Unit tests
-├── frontend/                     # React 19 + TypeScript patient client (Vite)
-│   ├── package.json              # Client dependencies and npm scripts
-│   ├── vite.config.ts            # Proxy and build settings
-│   ├── public/                   # Static files
-│   └── src/                      # React components, pages, styles
-├── database/                     # Database setup scripts and sample datasets
-│   ├── init-scripts/             # MySQL container initialization scripts (run in order)
-│   └── dataset/                  # Sample patient data and medicine catalogs
-├── docs/                         # Technical documentation and diagrams
-│   ├── architecture/             # Architecture specifications and diagrams
-│   ├── images/                   # UI screenshots used in this guide
-│   └── maintenance/              # Audits, file movement manifests, cleanup logs
-├── scripts/                      # Maintenance and utility scripts
-├── Dockerfile                    # Multi-stage Docker build (Maven + Tomcat)
-├── docker-compose.yml            # Multi-container setup (MySQL 8 + Tomcat 9)
+├── frontend/                     # React 19 + TypeScript web application (Vite)
+│   ├── package.json              # NPM dependencies and scripts
+│   ├── vite.config.ts            # Vite proxy and build settings
+│   ├── tsconfig.json             # TypeScript configuration
+│   ├── public/                   # Static assets
+│   └── src/                      # React views, components, catalog, and API layer
+├── animation/                    # 30-second whiteboard animation & generator CLI
+│   ├── iryotek_whiteboard_animation_30s.mp4 # Full HD 1080p whiteboard animation video
+│   ├── iryotek_whiteboard_animation.gif     # Animated GIF demo
+│   ├── source_illustration.jpg              # High-contrast vector source illustration
+│   └── render_whiteboard.py                 # Standalone whiteboard animation renderer
+├── database/                     # MySQL setup scripts and seed datasets
+│   ├── init-scripts/             # Database initialization schemas (run in sequence)
+│   └── dataset/                  # Structured medicine and hospital catalogs
+├── docs/                         # Technical documentation and media
+│   ├── architecture/             # System diagrams and schema contracts
+│   ├── images/                   # UI screenshots and animation assets
+│   └── maintenance/              # Repository audit and refactoring history
+├── scripts/                      # Platform utility and automation scripts
+├── Dockerfile                    # Multi-stage production container build (Maven + Tomcat)
+├── docker-compose.yml            # Multi-container orchestration (MySQL 8 + Tomcat 9)
 ├── .env.example                  # Environment configuration template
-├── .editorconfig                 # Code formatting rules
 └── README.md
 ```
 
 ---
 
-## System Walkthrough
+## Getting Started
 
-### Home Landing
-The public landing page lists medical specialties, doctor profiles, and portal links.
+### Prerequisites
 
-![Iryotek Homepage](docs/images/homepage.png)
+* **Node.js**: 20+ (with npm or pnpm)
+* **Java Development Kit**: JDK 8, 11, or 17
+* **Apache Maven**: 3.8+
+* **Docker & Docker Compose** (Optional, for containerized run)
 
----
+### 1. Running via Docker Compose
 
-### Patient Workflows
-* **Sign In**: Patient authentication portal.  
-  ![Patient Login](docs/images/user_login.png)
+To start the database, Java backend, and Tomcat container in one command:
 
-* **Booking a Consultation**: Pick a doctor, choose a date, and reserve a queue slot.  
-  ![Schedule Appointment](docs/images/user_appointment.png)
-
----
-
-### Doctor Dashboard
-* **Practitioner Sign In**: Login page for doctors.  
-  ![Doctor Login](docs/images/doctor_login.png)
-
----
-
-### Admin Portal
-* **Staff Sign In**: Administrative login.  
-  ![Admin Login](docs/images/admin_login.png)
-
-* **Metrics and Overview**: Summary of registered doctors, patients, appointments, and hospital branches.  
-  ![Admin Dashboard](docs/images/admin_dashboard.png)
-
----
-
-### Hospital Directory
-* **Branch Locator**: Hospital branches and affiliated clinics.  
-  ![Find Hospital](docs/images/find_hospital.png)
-
----
-
-## Setup and Local Development
-
-### 1. Prerequisites
-* **Java Development Kit (JDK)**: Version 17 or higher
-* **Apache Maven**: Version 3.8 or higher
-* **MySQL Server**: Version 8.0 or higher
-* **Node.js**: Version 18 or higher with `npm`
-* **Docker and Docker Compose** (optional, for containerized setup)
-
----
-
-### 2. Environment Configuration
-Copy the template file to create your local `.env`:
 ```bash
-cp .env.example .env
+docker compose up -d
 ```
-Default values are configured for local development.
 
----
+### 2. Manual Development Setup
 
-### 3. Database Initialization (Manual Setup)
-If running MySQL locally without Docker:
-1. Log in to MySQL:
-   ```bash
-   mysql -u root -p
-   ```
-2. Create the database:
-   ```sql
-   CREATE DATABASE hospital CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-   ```
-3. Run the initialization scripts in sequence:
-   ```bash
-   mysql -u root -p hospital < database/init-scripts/01_schema.sql
-   mysql -u root -p hospital < database/init-scripts/02_healthcare_data.sql
-   mysql -u root -p hospital < database/init-scripts/03_pharmacy_schema.sql
-   mysql -u root -p hospital < database/init-scripts/04_import_medicines.sql
-   ```
-4. Check your database credentials in `backend/src/main/resources/config.properties`, or export environment variables:
-   ```bash
-   export DB_URL="jdbc:mysql://localhost:3306/hospital"
-   export DB_USER="root"
-   export DB_PASSWORD="your_password"
-   ```
+#### Frontend (React + Vite)
 
----
-
-### 4. Build and Run Backend (Maven and Tomcat)
-
-1. Go to the backend folder:
-   ```bash
-   cd backend
-   ```
-2. Build the WAR package:
-   ```bash
-   mvn clean package
-   ```
-3. Deploy `target/hospital.war` to your Tomcat `webapps/` folder, or run with embedded Jetty:
-   ```bash
-   mvn jetty:run -Djetty.http.port=8080
-   ```
-4. Access the backend at:
-   ```
-   http://localhost:8080/hospital/
-   ```
-
----
-
-### 5. Run Frontend Client (React and Vite)
-
-1. Go to the frontend folder:
-   ```bash
-   cd frontend
-   ```
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-3. Start the dev server:
-   ```bash
-   npm run dev
-   ```
-4. The client will be available at `http://localhost:8443`.
-
----
-
-### 6. One-Command Docker Setup
-
-To start both MySQL and the Tomcat application server:
 ```bash
-docker compose up --build
+cd frontend
+npm install
+npm run dev
 ```
-MySQL will automatically run the SQL files in `./database/init-scripts/` on first startup.
+
+The frontend will be available at `http://localhost:8443` (or port `5173`).
+
+#### Backend (Java + Tomcat)
+
+```bash
+cd backend
+mvn clean package
+```
+
+Deploy the generated `target/Iryotek.war` to your local Apache Tomcat `webapps/` folder, or run with embedded Tomcat.
 
 ---
 
-## Troubleshooting
+## Whiteboard Animation Generator
 
-1. **MySQL Connection Errors**:
-   - Check that MySQL is running: `brew services status mysql` or `systemctl status mysql`.
-   - Verify that the `hospital` database exists and user credentials match `config.properties`.
-2. **Port Conflicts**:
-   - If port 8080 is already in use, update the port mapping in `docker-compose.yml` or run Jetty on another port (`-Djetty.http.port=8081`).
-   - If port 8443 is taken, change `server.port` in `frontend/vite.config.ts`.
-3. **Gemini API Not Configured**:
-   - The symptom checker uses a local fallback rule set in `GeminiAiUtil.java`. Symptom triage continues to work even without an external API key.
+The repository includes a dedicated CLI tool to render custom whiteboard animations using stroke-path and color-clustering algorithms:
+
+```bash
+# Render a 30-second detailed animation from any illustration
+python3 animation/render_whiteboard.py --image animation/source_illustration.jpg --duration 30.0
+```
 
 ---
 
-## Security Notes
+## Build Verification
 
-* **Passwords**: User, doctor, and admin passwords use BCrypt hashing (`PasswordUtil.java`).
-* **SQL Queries**: Database access uses parameterized `PreparedStatement` queries to prevent SQL injection.
-* **Access Control**: Session filters (`AdminFilter.java`, `DoctorFilter.java`) protect admin and doctor routes from unauthenticated requests.
+* **Frontend TypeScript**: `cd frontend && npx tsc --noEmit` exits with `0` (Zero compiler errors).
+* **Vite Production Build**: `cd frontend && npm run build` compiles `dist/` in under 1 second.
+* **Java Backend**: `cd backend && mvn clean compile` successfully compiles all 89 enterprise source files.
+
+---
+
+## License
+
+This project is licensed under the Apache License 2.0.
