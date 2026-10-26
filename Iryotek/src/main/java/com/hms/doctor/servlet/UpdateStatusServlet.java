@@ -24,7 +24,7 @@ import com.hms.util.EmailUtil;
 import com.hms.websocket.QueueWebSocketServer;
 
 @WebServlet("/updateStatus")
-public class UpdateStatus extends HttpServlet {
+public class UpdateStatusServlet extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {

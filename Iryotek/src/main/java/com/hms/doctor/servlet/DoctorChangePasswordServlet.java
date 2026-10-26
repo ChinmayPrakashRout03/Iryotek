@@ -13,7 +13,7 @@ import com.hms.dao.DoctorDAO;
 import com.hms.db.DBConnection;
 
 @WebServlet("/doctorChangePassword")
-public class DoctorChangePassword extends HttpServlet {
+public class DoctorChangePasswordServlet extends HttpServlet {
 
 	@Override
 	protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {

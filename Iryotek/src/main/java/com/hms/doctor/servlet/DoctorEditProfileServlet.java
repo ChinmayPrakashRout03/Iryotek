@@ -21,16 +21,13 @@ public class DoctorEditProfileServlet extends HttpServlet {
 
 		try {
 
-			// get all data which is coming from doctor.jsp doctor details
 			String fullName = req.getParameter("fullName");
 			String dateOfBirth = req.getParameter("dateOfBirth");
 			String qualification = req.getParameter("qualification");
 			String specialist = req.getParameter("specialist");
 			String email = req.getParameter("email");
 			String phone = req.getParameter("phone");
-			//String password = req.getParameter("password");
 
-			
 			int id = Integer.parseInt(req.getParameter("doctorId"));
 
 			Doctor doctor = new Doctor(id, fullName, dateOfBirth, qualification, specialist, "", email, phone, "", 0, "09:00 AM - 05:00 PM");
@@ -44,7 +41,7 @@ public class DoctorEditProfileServlet extends HttpServlet {
 			if (f == true) {
 				Doctor updateDoctorObj = docDAO.getDoctorById(id);
 				session.setAttribute("successMsgForD", "Doctor update Successfully");
-				session.setAttribute("doctorObj", updateDoctorObj); // over ride or update old session value to new updated doctor value.
+				session.setAttribute("doctorObj", updateDoctorObj);
 				resp.sendRedirect("doctor/edit_profile.jsp");
 
 			} else {
