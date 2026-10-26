@@ -127,7 +127,7 @@ export const MEDICINE_IMAGES = [
 ]
 
 // Check if medicine has authentic product photography
-export function hasAuthenticMedicinePhoto(medicine?: { id?: number | string; image?: string; imageUrl?: string }): boolean {
+export function hasAuthenticMedicinePhoto(medicine?: { id?: number | string; image?: string | null; imageUrl?: string }): boolean {
   if (!medicine) return false
   const url = medicine.imageUrl || medicine.image
   if (!url || typeof url !== 'string') return false
@@ -149,10 +149,20 @@ export function getMedicineDosageIcon(dose?: string, category?: string): string 
 }
 
 // Dataset & curated medicine image handler: returns authentic dataset photography or null if no packaging image
-export function getMedicineImage(medicine?: { id?: number | string; name?: string; category?: string; dose?: string; image?: string; imageUrl?: string }): string | null {
+export function getMedicineImage(medicine?: { id?: number | string; name?: string; category?: string; dose?: string; image?: string | null; imageUrl?: string }): string | null {
   if (medicine?.imageUrl && (medicine.imageUrl.startsWith('http://') || medicine.imageUrl.startsWith('https://'))) return medicine.imageUrl
   if (medicine?.image && (medicine.image.startsWith('http://') || medicine.image.startsWith('https://'))) return medicine.image
   return null
+}
+
+export const IMAGES: Record<string, string> = {
+  hero: '/assets/img/clinical-consultation.jpg',
+  doctor: 'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&w=1920&q=85',
+  doctor2: 'https://images.unsplash.com/photo-1594824476967-48c8b964273f?auto=format&fit=crop&w=1920&q=85',
+  waiting: 'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&w=1920&q=85',
+  hospital: 'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&w=1920&q=85',
+  hospitalExterior: 'https://images.unsplash.com/photo-1764885517847-79d62138cc58?auto=format&fit=crop&w=1920&q=85',
+  pharmacy: 'https://images.unsplash.com/photo-1587854692152-cbe660dbde88?auto=format&fit=crop&w=1920&q=85',
 }
 
 

@@ -15,7 +15,7 @@ const SidebarExpand = (props: React.SVGProps<SVGSVGElement>) => (
     <path d="M4.25 8.75L7 12L4.25 15.25" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 )
-import { IMAGES } from './main.js'
+import { IMAGES } from './images'
 import { doctors, medicines, demoOrders, hospitals, type Medicine, type DemoOrder } from './mock-data'
 import { getDoctors, getStats, checkSymptomsAI, bookAppointment, getMedicines, getMedicineCategories, getSpecialties, getCities, getAppointments, updateAppointmentStatus, getSharedAppointments, getSharedPrescriptions, saveSharedPrescription, deleteSharedPrescription, clearAllSharedPrescriptions, loadAllDoctors, loadAllMedicines, type ApiDoctor, type ApiMedicine, type ApiAppointment, type SystemStats, type TriageResult, type SharedPrescription } from './api'
 import { getStoredUser, getStoredAuthUser, logoutUser, updateStoredPatientProfile, updateStoredDoctorProfile, type AuthUser, type PatientHealthProfile } from './auth'
@@ -45,6 +45,7 @@ type Appointment = {
   cancellationFee?: number
   refundAmount?: number
   refundUtr?: string
+  patientName?: string
 }
 type Claim = { id: string; title: string; date: string; amount: number; status: string }
 type DemoState = { appointments: Appointment[]; cart: Medicine[]; claims: Claim[]; order: boolean; prescription: boolean; orders: DemoOrder[] }
@@ -141,7 +142,7 @@ export function Photo({ image = '', alt, className = '' }: { image?: string; alt
   }
   return <img className={className} src={src} alt={alt} width="480" height="480" loading="lazy" decoding="async" onError={() => setFailed(true)} />
 }
-export function Badge({ children }: { children: ReactNode }) { return <span className="demo-badge">{children}</span> }
+export function Badge({ children, style, className = '' }: { children: ReactNode; style?: React.CSSProperties; className?: string }) { return <span className={`demo-badge ${className}`} style={style}>{children}</span> }
 export function Panel({ title, subtitle, action, children, className = '' }: { title?: string; subtitle?: ReactNode; action?: ReactNode; children: ReactNode; className?: string }) {
   return (
     <section className={`demo-panel ${className}`}>
@@ -1742,7 +1743,7 @@ function AppointmentsPage({ notify }: { notify: (text: string) => void }) {
         ) : (
           state.appointments.map(rawItem => {
             const sharedMatch = sharedAppointments.find(s => String(s.id) === String(rawItem.id) || (s.tokenNo && String(s.tokenNo) === String(rawItem.id)))
-            const item = sharedMatch ? { ...rawItem, status: sharedMatch.status, hospital: sharedMatch.hospital || rawItem.hospital, hospitalCity: sharedMatch.hospitalCity || rawItem.hospitalCity } : rawItem
+            const item: Appointment = sharedMatch ? { ...rawItem, status: sharedMatch.status || rawItem.status, hospital: sharedMatch.hospital || rawItem.hospital, hospitalCity: sharedMatch.hospitalCity || rawItem.hospitalCity } : rawItem
             const isApproved = item.status === 'Approved' || item.status === 'Confirmed'
             return (
             <article className="appointment-card" key={item.id} style={{ borderLeft: isApproved ? '4px solid #059669' : item.status === 'Cancelled' ? '4px solid #dc2626' : '4px solid #f59e0b', marginBottom: '16px' }}>
@@ -2358,7 +2359,7 @@ function PharmacyPage({ notify }: { notify: (text: string) => void }) {
                   <div className="medicine-visual">
                     {hasAuthenticMedicinePhoto(item) && !failedImages.has(item.id) ? (
                       <img
-                        src={item.imageUrl || item.image || ''}
+                        src={(item as any).imageUrl || item.image || ''}
                         alt={item.name}
                         className="medicine-photo-thumb"
                         loading="lazy"
@@ -2855,7 +2856,7 @@ function RecordsPage({ notify }: { notify: (text: string) => void }) {
       type: 'Clinical profile',
       date: 'On Registration',
       doctor: 'Iryotek Clinical Onboarding',
-      detail: `Age: ${profile.age} · Gender: ${profile.gender} · Blood Group: ${profile.bloodGroup} · Address: ${profile.address}, ${profile.city} (${profile.pincode}) · Allergies: ${profile.allergies.join(', ')} · Chronic Conditions: ${profile.chronicConditions.join(', ')} · Emergency Contact: ${profile.emergencyContact.name} (${profile.emergencyContact.relationship}, ${profile.emergencyContact.phone})`,
+      detail: `Age: ${profile.age} · Gender: ${profile.gender} · Blood Group: ${profile.bloodGroup} · Address: ${profile.address}, ${profile.city} (${profile.pincode}) · Allergies: ${profile.allergies?.join(', ') || 'None'} · Chronic Conditions: ${profile.chronicConditions?.join(', ') || 'None'} · Emergency Contact: ${profile.emergencyContact?.name || ''} (${profile.emergencyContact?.relationship || ''}, ${profile.emergencyContact?.phone || ''})`,
     })
     if (profile.pastSurgeries && profile.pastSurgeries.length > 0) {
       userRecords.push({
@@ -3389,7 +3390,7 @@ function DoctorPage({ notify }: { notify: (text: string) => void }) {
   const activePatient = visibleQueue[selectedIndex] || visibleQueue[0] || null
 
   const handleAcceptAppointment = async (id: string, patientName: string) => {
-    await updateAppointmentStatus(id, 'Approved', docId)
+    await updateAppointmentStatus(id, 'Approved', docId ? Number(docId) : undefined)
     update(prev => ({
       ...prev,
       appointments: prev.appointments.map(a => String(a.id) === String(id) ? { ...a, status: 'Approved' } : a)
@@ -3400,7 +3401,7 @@ function DoctorPage({ notify }: { notify: (text: string) => void }) {
 
   const handleCancelAppointment = async (id: string, patientName: string) => {
     if (window.confirm(`Are you sure you want to cancel appointment #${id} for ${patientName}?`)) {
-      await updateAppointmentStatus(id, 'Cancelled', docId)
+      await updateAppointmentStatus(id, 'Cancelled', docId ? Number(docId) : undefined)
       update(prev => ({
         ...prev,
         appointments: prev.appointments.map(a => String(a.id) === String(id) ? { ...a, status: 'Cancelled' } : a)
@@ -3656,7 +3657,7 @@ function DoctorPage({ notify }: { notify: (text: string) => void }) {
             <>
               <div className="demo-doctor-inline">
                 <span className="demo-user-avatar">
-                  {activePatient.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()}
+                  {activePatient.name.split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase()}
                 </span>
                 <div>
                   <h4>{activePatient.name}</h4>
@@ -3893,7 +3894,7 @@ function AdminPage({ notify }: { notify: (text: string) => void }) {
     getStats().then(s => setStats(s))
   }, [])
 
-  const exportData = () => { const rows = [['Token', 'Doctor', 'Date', 'Time', 'Status'], ...state.appointments.map(item => [item.id, item.doctor, item.date, item.time, item.status])]; const url = URL.createObjectURL(new Blob(['\ufeff' + rows.map(row => row.map(cell => `"${cell.replaceAll('"', '""')}"`).join(',')).join('\n')], { type: 'text/csv;charset=utf-8' })); const anchor = document.createElement('a'); anchor.href = url; anchor.download = 'iryotek-demo-appointments.csv'; anchor.click(); setTimeout(() => URL.revokeObjectURL(url), 1000); notify('Appointment spreadsheet downloaded. Open it in Excel.') }
+  const exportData = () => { const rows = [['Token', 'Doctor', 'Date', 'Time', 'Status'], ...state.appointments.map(item => [item.id, item.doctor, item.date, item.time, item.status])]; const url = URL.createObjectURL(new Blob(['\ufeff' + rows.map(row => row.map(cell => `"${cell.replace(/"/g, '""')}"`).join(',')).join('\n')], { type: 'text/csv;charset=utf-8' })); const anchor = document.createElement('a'); anchor.href = url; anchor.download = 'iryotek-demo-appointments.csv'; anchor.click(); setTimeout(() => URL.revokeObjectURL(url), 1000); notify('Appointment spreadsheet downloaded. Open it in Excel.') }
   const visible = state.appointments.filter(item => `${item.doctor} ${item.id} ${item.status}`.toLowerCase().includes(query.toLowerCase()))
   
   return <><PageHeading label="ADMIN / COMMAND CENTER" title="System Operations & Analytics" description="Real-time MySQL database metrics: 100,413 doctors, 1,130 hospitals, and 47,335 medicines." action={<select aria-label="Reporting period" value={period} onChange={event => setPeriod(event.target.value)}><option>This week</option><option>This month</option></select>} /><div className="demo-metric-grid"><Metric label="NETWORK DOCTORS" value={stats.doctorsCount.toLocaleString()} note="100,413 across India" /><Metric label="CONNECTED HOSPITALS" value={stats.hospitalsCount.toLocaleString()} note="1,130 healthcare centers" /><Metric label="DATABASE MEDICINES" value={stats.medicinesCount.toLocaleString()} note="47,335 pharmaceutical items" /><Metric label="PATIENT SATISFACTION" value={String(stats.satisfactionRate)} unit="%" note="↗ 2.1% clinical index" /></div><div className="demo-split wide-left"><Panel title="A week of connected care" subtitle={period.toUpperCase()}><div className="admin-page-chart">{[.45, .6, .52, .8, .68, .94, .78].map((value, index) => <div key={index}><span>{Math.round(value * (period === 'This week' ? 220 : 940))}</span><i style={{ transform: `scaleY(${value})` }} /><small>{['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'][index]}</small></div>)}</div></Panel><Panel title="Operations pulse" subtitle="LIVE DATABASE"><div className="demo-list-row"><span>MySQL Database</span><Badge>Connected (Port 3306)</Badge></div><div className="demo-list-row"><span>Gemini AI Triage</span><Badge>Active</Badge></div><div className="demo-list-row"><span>Pharmacy Service</span><Badge>47,335 items</Badge></div><div className="demo-list-row"><span>Pending claims</span><Link to="/claims">Review claims ↗</Link></div><button className="text-link" onClick={exportData}>Export spreadsheet ↓</button><button className="text-link" onClick={() => window.print()}>Print / save PDF ↓</button></Panel></div><Panel title="Appointment activity" subtitle={`${visible.length} BOOKINGS`}><label className="demo-search"><span>⌕</span><input aria-label="Filter appointment activity" placeholder="Search doctor, token, or status" value={query} onChange={event => setQuery(event.target.value)} /></label><div className="demo-table-wrap"><table><thead><tr><th>Token</th><th>Doctor</th><th>Date</th><th>Time</th><th>Status</th></tr></thead><tbody>{visible.map(item => <tr key={item.id}><td className="mono">{item.id}</td><td>{item.doctor}</td><td>{item.date}</td><td>{item.time}</td><td><Badge>{item.status}</Badge></td></tr>)}</tbody></table>{!visible.length && <p className="empty-results">No bookings match your search.</p>}</div></Panel></>
@@ -4038,8 +4039,8 @@ function DoctorProfileView({ notify }: { notify: (text: string) => void }) {
     registrationNo: user?.registrationNo || '',
     hospital: user?.hospital || '',
     department: user?.department || '',
-    experience: user?.experience || '',
-    fee: user?.fee || '',
+    experience: String(user?.experience || ''),
+    fee: String(user?.fee || ''),
     timings: user?.timings || '',
     phone: user?.phone || '',
     email: user?.email || '',
@@ -4057,8 +4058,8 @@ function DoctorProfileView({ notify }: { notify: (text: string) => void }) {
         registrationNo: user.registrationNo || '',
         hospital: user.hospital || '',
         department: user.department || '',
-        experience: user.experience || '',
-        fee: user.fee || '',
+        experience: String(user.experience || ''),
+        fee: String(user.fee || ''),
         timings: user.timings || '',
         phone: user.phone || '',
         email: user.email || '',
@@ -4114,7 +4115,7 @@ function DoctorProfileView({ notify }: { notify: (text: string) => void }) {
 
       <div className="demo-metric-grid">
         <Metric label="CLINICAL SPECIALTY" value={specialty} note="Primary Board Designation" />
-        <Metric label="PRACTICE EXPERIENCE" value={exp} note="Verified Clinical Tenancy" />
+        <Metric label="PRACTICE EXPERIENCE" value={String(exp)} note="Verified Clinical Tenancy" />
         <Metric label="CONSULTATION TARIFF" value={fee ? `₹${fee}` : '--'} unit={fee ? 'per session' : ''} note="In-Clinic & Video Session" />
         <Metric label="COUNCIL REGISTRATION" value={regNo} note="National Medical Commission (NMC)" />
       </div>

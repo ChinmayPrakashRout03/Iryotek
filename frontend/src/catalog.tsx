@@ -53,7 +53,7 @@ function HospitalsPage({ notify }: { notify?: (message: string) => void }) {
   const [city, setCity] = useState('All cities')
   const [specialty, setSpecialty] = useState('All specialties')
   const [emergencyOnly, setEmergencyOnly] = useState(false)
-  const [hospitalsList, setHospitalsList] = useState<ApiHospital[]>(mockHospitals)
+  const [hospitalsList, setHospitalsList] = useState<any[]>(mockHospitals)
   const [loading, setLoading] = useState(false)
   const [isLiveDb, setIsLiveDb] = useState(false)
   const [page, setPage] = useState(1)
@@ -353,7 +353,7 @@ function HospitalsPage({ notify }: { notify?: (message: string) => void }) {
               <h3><Link to={`/hospitals/${hospital.id}`}>{hospital.name}</Link></h3>
               <p>{hospital.address}</p>
               <div className="hospital-tags">
-                {(hospital.specialties || ['General Medicine']).map(value => <span key={value}>{value}</span>)}
+                {(hospital.specialties || ['General Medicine']).map((value: string) => <span key={value}>{value}</span>)}
               </div>
               <div className="demo-list-row">
                 <span>{hospital.beds || 150} beds · Est. {hospital.established || 2012}</span>
@@ -398,7 +398,7 @@ function HospitalsPage({ notify }: { notify?: (message: string) => void }) {
 }
 
 function HospitalDetail({ id }: { id: string }) {
-  const [hospital, setHospital] = useState<ApiHospital | undefined>(() => mockHospitals.find(item => String(item.id) === id || String((item as any).numericId) === id))
+  const [hospital, setHospital] = useState<any>(() => mockHospitals.find(item => String(item.id) === id || String((item as any).numericId) === id))
   const [team, setTeam] = useState<ApiDoctor[]>([])
 
   useEffect(() => {
@@ -436,7 +436,7 @@ function HospitalDetail({ id }: { id: string }) {
       <div className="demo-split">
         <Panel title="Departments & services" subtitle="CONNECTED CARE">
           <div className="hospital-tags">
-            {(hospital.specialties || ['General Medicine', 'Cardiology', 'Pediatrics']).map(specialty => <span key={specialty}>{specialty}</span>)}
+            {(hospital.specialties || ['General Medicine', 'Cardiology', 'Pediatrics']).map((specialty: string) => <span key={specialty}>{specialty}</span>)}
           </div>
           {['Outpatient consultations', 'Diagnostics & laboratory', 'Digital prescriptions', 'Insurance coordination'].map(service => (
             <div className="demo-list-row" key={service}>
@@ -1061,7 +1061,7 @@ function DoctorPrescriptionsView({ notify, onSwitchToPatient }: Props & { onSwit
     window.scrollTo({ top: 120, behavior: 'smooth' })
   }
 
-  const handleMedChange = (index: number, field: string, value: string) => {
+  const handleMedChange = (index: number, field: string, value: any) => {
     setEditMeds(prev => prev.map((m, idx) => idx === index ? { ...m, [field]: value } : m))
   }
 
@@ -1097,7 +1097,7 @@ function DoctorPrescriptionsView({ notify, onSwitchToPatient }: Props & { onSwit
             dose: m.dose || '1 tablet as directed',
             frequency: m.frequency || 'After meals',
             duration: m.duration || '5 days',
-            price: Number(m.price) || 120
+            price: Number((m as any).price) || 120
           }))
         }
         return [{
@@ -1105,7 +1105,7 @@ function DoctorPrescriptionsView({ notify, onSwitchToPatient }: Props & { onSwit
           dose: m.dose || '1 tablet as directed',
           frequency: m.frequency || 'After meals',
           duration: m.duration || '5 days',
-          price: Number(m.price) || 120
+          price: Number((m as any).price) || 120
         }]
       }).filter(m => m.name.length > 0),
       advice: editAdvice.trim() || 'Follow general medical advice.',
@@ -1440,7 +1440,7 @@ function DoctorPrescriptionsView({ notify, onSwitchToPatient }: Props & { onSwit
   )
 }
 
-function PrescriptionsPage({ notify }: Props) {
+function PrescriptionsPage({ notify = () => {} }: { notify?: (message: string) => void }) {
   const { state, update } = useContext(DemoContext)
   const user = getStoredAuthUser()
   const navigate = useNavigate()
@@ -1539,7 +1539,7 @@ function PrescriptionsPage({ notify }: Props) {
       if (parts.length > 1) {
         parts.forEach((p, pIdx) => {
           const found = mockMedicines.find(m => m.name.toLowerCase().includes(p.toLowerCase().slice(0, 8)))
-          const price = itemPrice || Number(found?.price) || Number(rx.price) || 120
+          const price = itemPrice || Number(found?.price) || Number((rx as any).price) || 120
           newItems.push({
             id: found ? found.id : Math.floor(Math.random() * 900) + 100 + idx * 10 + pIdx,
             name: p,
@@ -1555,7 +1555,7 @@ function PrescriptionsPage({ notify }: Props) {
         })
       } else {
         const found = mockMedicines.find(m => m.name.toLowerCase().includes(item.name.toLowerCase().slice(0, 8)))
-        const price = itemPrice || Number(found?.price) || Number(rx.price) || 120
+        const price = itemPrice || Number(found?.price) || Number((rx as any).price) || 120
         newItems.push({
           id: found ? found.id : Math.floor(Math.random() * 900) + 100 + idx,
           name: item.name,

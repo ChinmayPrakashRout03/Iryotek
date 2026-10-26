@@ -83,6 +83,8 @@ export interface ApiDoctor {
   bio?: string
   reviews?: number
   languages?: string[]
+  numericId?: number
+  numericHospitalId?: number
   isRegistered?: boolean
   isNew?: boolean
 }
@@ -113,7 +115,8 @@ export interface ApiMedicine {
   quantity?: number
   prescription?: boolean
   description?: string
-  image?: string
+  image?: string | null
+  imageUrl?: string
 }
 
 export interface MedicineListResponse {
@@ -342,9 +345,9 @@ export async function loadAllDoctors(): Promise<ApiDoctor[]> {
           fullDoctorsCache = mapped
           return mapped
         }
-        return mockDoctors as ApiDoctor[]
+        return mockDoctors as unknown as ApiDoctor[]
       } catch {
-        return mockDoctors as ApiDoctor[]
+        return mockDoctors as unknown as ApiDoctor[]
       }
     })()
   }
@@ -1066,6 +1069,9 @@ export interface SharedPrescription {
     price?: number
   }[]
   advice?: string
+  instructions?: string
+  specialty?: string
+  nmcNumber?: string
   followUp?: string
   vitals?: { bp?: string; pulse?: string; spo2?: string; temp?: string }
 }

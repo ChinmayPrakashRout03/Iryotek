@@ -71,6 +71,7 @@ export interface PatientHealthProfile {
 export interface AuthUser {
   uid: string
   displayName: string
+  fullName?: string
   email?: string
   phoneNumber?: string
   photoURL?: string
@@ -79,14 +80,22 @@ export interface AuthUser {
   access: string
   specialist?: string
   hospital?: string
-  experience?: number
+  experience?: number | string
   qualification?: string
+  qualifications?: string
+  department?: string
   phone?: string
   timings?: string
   registrationNo?: string
   bio?: string
-  fee?: number
+  fee?: number | string
   city?: string
+  id?: number | string
+  doctorId?: number | string
+  doctorProfile?: {
+    specialty?: string
+    registrationNumber?: string
+  }
   patientProfile?: PatientHealthProfile
 }
 

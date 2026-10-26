@@ -270,6 +270,15 @@ export async function saveAppointmentFirestore(uid: string, appointment: {
   patientName: string
   diseases?: string
   status?: string
+  hospital?: string
+  hospitalCity?: string
+  state?: string
+  type?: string
+  fee?: number
+  paymentStatus?: string
+  paymentMethod?: string
+  utr?: string
+  [key: string]: any
 }): Promise<string | null> {
   const db = getFirestoreDb()
   if (!db || !uid) return null
