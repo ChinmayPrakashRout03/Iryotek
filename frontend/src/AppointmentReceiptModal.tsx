@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import QRCode from 'qrcode'
+import jsPDF from 'jspdf'
+import html2canvas from 'html2canvas'
 import { getStoredAuthUser, type AuthUser } from './auth'
 import { getSharedPrescriptions, type SharedPrescription } from './api'
 
@@ -53,6 +55,8 @@ export function AppointmentReceiptModal({
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>('')
   const [matchedPrescription, setMatchedPrescription] = useState<SharedPrescription | null>(null)
   const [isCopied, setIsCopied] = useState<boolean>(false)
+  const [isExporting, setIsExporting] = useState<boolean>(false)
+  const [exportMessage, setExportMessage] = useState<string>('')
   const receiptRef = useRef<HTMLDivElement>(null)
 
   const authUser: AuthUser | null = getStoredAuthUser()
@@ -202,8 +206,112 @@ export function AppointmentReceiptModal({
 
   const barcodeId = `APPT-IRY-${rawDateCode.length >= 8 ? rawDateCode : '20250815'}-${queueBadgeText}`
 
+  const handleDownloadPdf = async () => {
+    const receiptEl = document.getElementById('iryotek-e-receipt')
+    if (!receiptEl) return
+    setIsExporting(true)
+    setExportMessage('Generating Official PDF...')
+    try {
+      const canvas = await html2canvas(receiptEl, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ffffff'
+      })
+      const imgData = canvas.toDataURL('image/png')
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4'
+      })
+      const pageWidth = pdf.internal.pageSize.getWidth()
+      const pageHeight = pdf.internal.pageSize.getHeight()
+      const margin = 10
+      const imgWidth = pageWidth - margin * 2
+      const imgHeight = (canvas.height * imgWidth) / canvas.width
+
+      pdf.addImage(imgData, 'PNG', margin, margin, imgWidth, Math.min(imgHeight, pageHeight - margin * 2))
+      pdf.save(`Iryotek-Receipt-${queueBadgeText}-${rawDateCode}.pdf`)
+    } catch (err) {
+      console.error('[Receipt PDF] download error:', err)
+      handlePrint()
+    } finally {
+      setIsExporting(false)
+      setExportMessage('')
+    }
+  }
+
+  const handleDownloadImage = async () => {
+    const receiptEl = document.getElementById('iryotek-e-receipt')
+    if (!receiptEl) return
+    setIsExporting(true)
+    setExportMessage('Generating PNG Image...')
+    try {
+      const canvas = await html2canvas(receiptEl, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ffffff'
+      })
+      const link = document.createElement('a')
+      link.download = `Iryotek-Receipt-${queueBadgeText}-${rawDateCode}.png`
+      link.href = canvas.toDataURL('image/png')
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+    } catch (err) {
+      console.error('Image download error:', err)
+    } finally {
+      setIsExporting(false)
+      setExportMessage('')
+    }
+  }
+
   const handlePrint = () => {
-    window.print()
+    const receiptEl = document.getElementById('iryotek-e-receipt')
+    if (!receiptEl) {
+      window.print()
+      return
+    }
+
+    // Direct clean print window
+    const printWindow = window.open('', '_blank', 'width=900,height=900')
+    if (printWindow) {
+      printWindow.document.write(`<!DOCTYPE html>
+<html>
+<head>
+  <title>Iryotek Appointment Receipt - ${queueBadgeText}</title>
+  <meta charset="utf-8" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif; }
+    body { background: #ffffff; padding: 20px; color: #1e293b; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+    @page { size: A4 portrait; margin: 10mm; }
+    @media print {
+      body { padding: 0; }
+    }
+  </style>
+</head>
+<body>
+  <div style="max-width: 860px; margin: 0 auto;">
+    ${receiptEl.outerHTML}
+  </div>
+  <script>
+    window.onload = function() {
+      setTimeout(function() {
+        window.focus();
+        window.print();
+      }, 350);
+    };
+  <\/script>
+</body>
+</html>`)
+      printWindow.document.close()
+    } else {
+      window.print()
+    }
   }
 
   const handleCopyBarcode = () => {
@@ -234,6 +342,11 @@ export function AppointmentReceiptModal({
       {/* Print stylesheet injected strictly for pristine rendering */}
       <style>{`
         @media print {
+          html, body {
+            overflow: visible !important;
+            height: auto !important;
+            background: #ffffff !important;
+          }
           body * {
             visibility: hidden !important;
           }
@@ -283,26 +396,34 @@ export function AppointmentReceiptModal({
             justifyContent: 'space-between',
             padding: '12px 20px',
             background: 'linear-gradient(90deg, #0e7490 0%, #0369a1 100%)',
-            color: '#ffffff'
+            color: '#ffffff',
+            flexWrap: 'wrap',
+            gap: '10px'
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <span style={{ fontSize: '18px' }}>📄</span>
             <strong style={{ fontSize: '14px', letterSpacing: '0.02em' }}>
-              Iryotek Official OPD Appointment & Prescription E-Receipt
+              Iryotek Official E-Receipt & Prescription
             </strong>
+            {isExporting && (
+              <span style={{ fontSize: '11px', background: 'rgba(255,255,255,0.25)', padding: '2px 8px', borderRadius: '4px' }}>
+                ⏳ {exportMessage}
+              </span>
+            )}
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
             <button
-              onClick={handlePrint}
+              onClick={handleDownloadPdf}
+              disabled={isExporting}
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '6px',
                 background: '#ffffff',
-                color: '#0369a1',
+                color: '#0e7490',
                 border: 'none',
-                fontWeight: 700,
+                fontWeight: 800,
                 fontSize: '12px',
                 padding: '7px 14px',
                 borderRadius: '8px',
@@ -310,7 +431,45 @@ export function AppointmentReceiptModal({
                 boxShadow: '0 2px 6px rgba(0,0,0,0.1)'
               }}
             >
-              <span>🖨️</span> Download PDF / Print
+              <span>📥</span> Download PDF
+            </button>
+            <button
+              onClick={handleDownloadImage}
+              disabled={isExporting}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                background: 'rgba(255,255,255,0.18)',
+                color: '#ffffff',
+                border: '1px solid rgba(255,255,255,0.4)',
+                fontWeight: 700,
+                fontSize: '12px',
+                padding: '6px 12px',
+                borderRadius: '8px',
+                cursor: 'pointer'
+              }}
+            >
+              <span>🖼️</span> Save PNG
+            </button>
+            <button
+              onClick={handlePrint}
+              disabled={isExporting}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                background: 'rgba(255,255,255,0.18)',
+                color: '#ffffff',
+                border: '1px solid rgba(255,255,255,0.4)',
+                fontWeight: 700,
+                fontSize: '12px',
+                padding: '6px 12px',
+                borderRadius: '8px',
+                cursor: 'pointer'
+              }}
+            >
+              <span>🖨️</span> Print
             </button>
             <button
               onClick={onClose}
@@ -1215,7 +1374,7 @@ export function AppointmentReceiptModal({
           <div style={{ fontSize: '12px', color: '#64748b' }}>
             Token Ref: <strong style={{ color: '#0f172a' }}>#{tokenRaw}</strong> · Showing official verified receipt format
           </div>
-          <div style={{ display: 'flex', gap: '10px' }}>
+          <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
             <button
               type="button"
               onClick={onClose}
@@ -1234,10 +1393,31 @@ export function AppointmentReceiptModal({
             </button>
             <button
               type="button"
-              onClick={handlePrint}
+              onClick={handleDownloadImage}
+              disabled={isExporting}
               style={{
-                padding: '8px 20px',
-                backgroundColor: '#059669',
+                padding: '8px 14px',
+                backgroundColor: '#ffffff',
+                border: '1px solid #0e7490',
+                borderRadius: '8px',
+                fontWeight: 700,
+                fontSize: '13px',
+                color: '#0e7490',
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px'
+              }}
+            >
+              <span>🖼️</span> Save PNG
+            </button>
+            <button
+              type="button"
+              onClick={handlePrint}
+              disabled={isExporting}
+              style={{
+                padding: '8px 16px',
+                backgroundColor: '#0284c7',
                 border: 'none',
                 borderRadius: '8px',
                 fontWeight: 700,
@@ -1246,11 +1426,32 @@ export function AppointmentReceiptModal({
                 cursor: 'pointer',
                 display: 'inline-flex',
                 alignItems: 'center',
-                gap: '8px',
-                boxShadow: '0 2px 6px rgba(5, 150, 105, 0.3)'
+                gap: '6px',
+                boxShadow: '0 2px 6px rgba(2, 132, 199, 0.25)'
               }}
             >
-              <span>📥</span> Download "E-receipt" (PDF/Print)
+              <span>🖨️</span> Print / Save PDF
+            </button>
+            <button
+              type="button"
+              onClick={handleDownloadPdf}
+              disabled={isExporting}
+              style={{
+                padding: '8px 20px',
+                backgroundColor: '#059669',
+                border: 'none',
+                borderRadius: '8px',
+                fontWeight: 800,
+                fontSize: '13px',
+                color: '#ffffff',
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                boxShadow: '0 2px 8px rgba(5, 150, 105, 0.35)'
+              }}
+            >
+              <span>📥</span> {isExporting ? 'Generating PDF...' : 'Download Official PDF'}
             </button>
           </div>
         </div>

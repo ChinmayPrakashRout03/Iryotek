@@ -13,7 +13,7 @@
           </div>
         </div>
         <div class="d-flex align-items-center gap-2">
-          <button type="button" class="btn btn-sm btn-light fw-bold px-3 py-2 rounded-pill shadow-sm" onclick="window.print()">
+          <button type="button" class="btn btn-sm btn-light fw-bold px-3 py-2 rounded-pill shadow-sm" onclick="printReceiptArea()">
             <i class="fa-solid fa-print me-1"></i> Print / Save as PDF
           </button>
           <button type="button" class="btn btn-sm btn-outline-light rounded-circle px-2" data-bs-dismiss="modal" aria-label="Close" style="width: 32px; height: 32px; line-height: 1;">
@@ -353,6 +353,30 @@ function openEReceiptModal(patientName, patientId, docName, specialty, apptDate,
     myModal.show();
   } catch (err) {
     console.error('Error opening E-Receipt modal:', err);
+  }
+}
+
+function printReceiptArea() {
+  try {
+    var area = document.getElementById('printableReceiptArea');
+    if (!area) {
+      window.print();
+      return;
+    }
+    var printWin = window.open('', '_blank', 'width=900,height=900');
+    if (printWin) {
+      printWin.document.write('<!DOCTYPE html><html><head><title>Iryotek Appointment Receipt</title>' +
+        '<meta charset="utf-8">' +
+        '<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">' +
+        '<style>body{padding:24px;background:#fff;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}@media print{body{padding:0;}}</style>' +
+        '</head><body><div style="max-width:840px;margin:0 auto;">' + area.innerHTML + '</div>' +
+        '<script>window.onload=function(){setTimeout(function(){window.print();},350);};<\/script></body></html>');
+      printWin.document.close();
+    } else {
+      window.print();
+    }
+  } catch (e) {
+    window.print();
   }
 }
 </script>
