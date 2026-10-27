@@ -601,15 +601,17 @@ public class RestApiServlet extends HttpServlet {
             Doctor doc = docDao.getDoctorById(doctorId);
             String docName = doc != null ? "Dr. " + doc.getFullName().replaceFirst("(?i)^dr\\.?\\s*", "") : "Doctor";
 
+            int generatedOrTokenId = appt.getId() > 0 ? appt.getId() : appt.getTokenNo();
             JsonObject res = new JsonObject();
             res.addProperty("status", "success");
             res.addProperty("message", "Appointment booked successfully");
+            res.addProperty("appointmentId", generatedOrTokenId);
             res.addProperty("tokenNo", appt.getTokenNo());
             res.addProperty("appointmentTime", appt.getAppointmentTime());
             res.addProperty("doctorId", doctorId);
             res.addProperty("doctor", docName);
             res.addProperty("date", appointmentDate);
-            res.addProperty("id", String.valueOf(appt.getTokenNo()));
+            res.addProperty("id", String.valueOf(generatedOrTokenId));
             sendJson(resp, res);
         } else {
             resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);

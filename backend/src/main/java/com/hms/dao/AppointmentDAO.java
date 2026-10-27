@@ -188,11 +188,17 @@ public class AppointmentDAO {
 				tokenPstmt.close();
 
 				appointment.setTokenNo(nextToken);
-				String computedTime = calculateNextAppointmentTime(appointment.getAppointmentDate(), lastTime, "09:00 AM", "05:00 PM");
-				appointment.setAppointmentTime(computedTime);
+				if (appointment.getAppointmentTime() == null || appointment.getAppointmentTime().trim().isEmpty() || "null".equalsIgnoreCase(appointment.getAppointmentTime()) || "SHIFT_OVER".equalsIgnoreCase(appointment.getAppointmentTime())) {
+					String computedTime = calculateNextAppointmentTime(appointment.getAppointmentDate(), lastTime, "09:00 AM", "09:00 PM");
+					if (!"SHIFT_OVER".equals(computedTime)) {
+						appointment.setAppointmentTime(computedTime);
+					} else {
+						appointment.setAppointmentTime("10:00 AM");
+					}
+				}
 
 				String sql = "insert into appointment(userId, fullName, gender, age, appointmentDate, email, phone, diseases, doctorId, address, status, tokenNo, appointmentTime) values(?,?,?,?,?,?,?,?,?,?,?,?,?)";
-				PreparedStatement pstmt = this.conn.prepareStatement(sql);
+				PreparedStatement pstmt = this.conn.prepareStatement(sql, java.sql.Statement.RETURN_GENERATED_KEYS);
 
 				pstmt.setInt(1, appointment.getUserId());
 				pstmt.setString(2, appointment.getFullName());
@@ -209,6 +215,11 @@ public class AppointmentDAO {
 				pstmt.setString(13, appointment.getAppointmentTime());
 
 				pstmt.executeUpdate();
+				ResultSet generatedKeys = pstmt.getGeneratedKeys();
+				if (generatedKeys.next()) {
+					appointment.setId(generatedKeys.getInt(1));
+				}
+				generatedKeys.close();
 				pstmt.close();
 				f = true;
 
