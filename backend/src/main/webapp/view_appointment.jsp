@@ -97,6 +97,7 @@
 										<th scope="col" class="py-3 px-2">Status</th>
 										<th scope="col" class="py-3 px-3">Live Queue</th>
 										<th scope="col" class="py-3 px-3">Consultation Type</th>
+										<th scope="col" class="py-3 px-3">E-Receipt</th>
 									</tr>
 								</thead>
 								<tbody>
@@ -162,6 +163,12 @@
 												<i class="fa-solid fa-hospital-user me-1"></i> In-Clinic OPD
 											</span>
 										</td>
+										<td class="px-3">
+											<button type="button" class="btn btn-sm text-white fw-bold shadow-sm" style="background: #0e7490; font-size: 11px; border-radius: 6px; padding: 5px 12px;"
+												onclick="openEReceiptModal('<%=apptList.getFullName()%>', 'PAT-<%=user != null ? user.getId() : 101%>', 'Dr. <%=docName%>', '<%=doctor != null ? doctor.getSpecialist() : "General Medicine"%>', '<%=apptList.getAppointmentDate()%>', '<%=apptList.getAppointmentTime()%>', '<%=apptList.getTokenNo()%>', '500', '<%=apptList.getDiseases()%>')">
+												<i class="fa-solid fa-file-invoice me-1"></i> E-Receipt
+											</button>
+										</td>
 									</tr>
 
 									<%
@@ -169,7 +176,7 @@
 									} else {
 									%>
 									<tr>
-										<td colspan="12" class="text-center py-5 text-muted fs-5">
+										<td colspan="13" class="text-center py-5 text-muted fs-5">
 											<i class="fa-solid fa-folder-open mb-2 d-block fs-1"></i>
 											No appointments booked yet. <a href="user_appointment.jsp" class="text-decoration-none fw-bold myP-color">Book your first appointment now</a>
 										</td>
@@ -258,5 +265,6 @@
 	setInterval(checkDoctorVideoStatus, 3500);
 	checkDoctorVideoStatus();
 </script>
+<%@include file="component/ereceipt_modal.jsp"%>
 </body>
-</html>
+</html>

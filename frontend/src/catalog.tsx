@@ -26,6 +26,7 @@ import { YouPIModal, type YouPIPaymentResult } from './YouPIModal'
 import { allMedicalFields } from './data/medical-fields'
 import { getStoredAuthUser, updateStoredPatientProfile, type PatientHealthProfile } from './auth'
 import { MedicineDropdownInput } from './MedicineDropdown'
+import { AppointmentReceiptModal } from './AppointmentReceiptModal'
 
 type Props = { page: string; notify: (message: string) => void }
 
@@ -1016,6 +1017,7 @@ function DoctorPrescriptionsView({ notify, onSwitchToPatient }: Props & { onSwit
   const [search, setSearch] = useState('')
   const [editingRx, setEditingRx] = useState<any | null>(null)
   const [isNewRx, setIsNewRx] = useState(false)
+  const [selectedReceiptRx, setSelectedReceiptRx] = useState<any | null>(null)
 
   // Edit form state
   const [editDiagnosis, setEditDiagnosis] = useState('')
@@ -1383,6 +1385,14 @@ function DoctorPrescriptionsView({ notify, onSwitchToPatient }: Props & { onSwit
                     <button
                       type="button"
                       className="button"
+                      style={{ padding: '6px 14px', fontSize: 12, background: '#0e7490', borderColor: '#0e7490' }}
+                      onClick={() => setSelectedReceiptRx(rx)}
+                    >
+                      <span>📥</span> E-receipt ↗
+                    </button>
+                    <button
+                      type="button"
+                      className="button"
                       style={{ padding: '6px 14px', fontSize: 12 }}
                       onClick={() => openEdit(rx)}
                     >
@@ -1436,6 +1446,30 @@ function DoctorPrescriptionsView({ notify, onSwitchToPatient }: Props & { onSwit
           </div>
         )}
       </Panel>
+
+      {/* Official Doctor & Patient E-Receipt Modal */}
+      <AppointmentReceiptModal
+        isOpen={Boolean(selectedReceiptRx)}
+        onClose={() => setSelectedReceiptRx(null)}
+        prescription={selectedReceiptRx}
+        appointment={selectedReceiptRx ? {
+          id: selectedReceiptRx.appointmentId || selectedReceiptRx.token || selectedReceiptRx.id,
+          tokenNo: selectedReceiptRx.token || selectedReceiptRx.id,
+          doctor: selectedReceiptRx.doctorName || 'Dr. Specialist',
+          doctorQualification: selectedReceiptRx.specialty || 'MBBS, MD',
+          specialty: selectedReceiptRx.specialty || selectedReceiptRx.doctorSpecialty || 'General Medicine',
+          date: selectedReceiptRx.date || 'Today',
+          time: '10:30 AM',
+          patientName: selectedReceiptRx.patientName,
+          patientAge: selectedReceiptRx.patientAge,
+          patientGender: selectedReceiptRx.patientGender,
+          hospital: 'Iryotek Super Speciality Hospital',
+          hospitalAddress: 'Central Medical Enclave, Sector 12',
+          fee: 500,
+          paymentMethod: 'UPI (Prepaid)',
+          status: 'Confirmed'
+        } : null}
+      />
     </>
   )
 }
@@ -1448,6 +1482,7 @@ function PrescriptionsPage({ notify = () => {} }: { notify?: (message: string) =
   const [viewMode, setViewMode] = useState<'patient' | 'doctor'>(user?.role === 'Doctor' ? 'doctor' : 'patient')
 
   const [livePrescriptions, setLivePrescriptions] = useState<SharedPrescription[]>(() => getSharedPrescriptions())
+  const [selectedReceiptRx, setSelectedReceiptRx] = useState<SharedPrescription | null>(null)
 
   useEffect(() => {
     const syncRx = () => {
@@ -1810,11 +1845,29 @@ function PrescriptionsPage({ notify = () => {} }: { notify?: (message: string) =
                     </button>
                     <button
                       type="button"
+                      className="button"
+                      style={{
+                        fontSize: '13px',
+                        background: '#0e7490',
+                        borderColor: '#0e7490',
+                        color: '#ffffff',
+                        fontWeight: 700,
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        boxShadow: '0 2px 8px rgba(14, 116, 144, 0.25)'
+                      }}
+                      onClick={() => setSelectedReceiptRx(rx)}
+                    >
+                      <span>📥</span> Download "E-receipt" <span>↗</span>
+                    </button>
+                    <button
+                      type="button"
                       className="button light"
                       style={{ fontSize: '13px' }}
-                      onClick={() => window.print()}
+                      onClick={() => setSelectedReceiptRx(rx)}
                     >
-                      🖨️ Print / Download e-Rx
+                      🖨️ Print / View Full Rx
                     </button>
                     <button
                       type="button"
@@ -1831,6 +1884,30 @@ function PrescriptionsPage({ notify = () => {} }: { notify?: (message: string) =
           ))}
         </div>
       )}
+
+      {/* Official Patient E-Receipt & Prescription Modal */}
+      <AppointmentReceiptModal
+        isOpen={Boolean(selectedReceiptRx)}
+        onClose={() => setSelectedReceiptRx(null)}
+        prescription={selectedReceiptRx}
+        appointment={selectedReceiptRx ? {
+          id: selectedReceiptRx.appointmentId || selectedReceiptRx.token || selectedReceiptRx.id,
+          tokenNo: selectedReceiptRx.token || selectedReceiptRx.id,
+          doctor: selectedReceiptRx.doctorName || 'Dr. Specialist',
+          doctorQualification: selectedReceiptRx.specialty || 'MBBS, MD',
+          specialty: selectedReceiptRx.specialty || selectedReceiptRx.doctorSpecialty || 'General Medicine',
+          date: selectedReceiptRx.date || 'Today',
+          time: '10:30 AM',
+          patientName: selectedReceiptRx.patientName,
+          patientAge: selectedReceiptRx.patientAge,
+          patientGender: selectedReceiptRx.patientGender,
+          hospital: 'Iryotek Super Speciality Hospital',
+          hospitalAddress: 'Central Medical Enclave, Sector 12',
+          fee: 500,
+          paymentMethod: 'UPI (Prepaid)',
+          status: 'Confirmed'
+        } : null}
+      />
     </>
   )
 }

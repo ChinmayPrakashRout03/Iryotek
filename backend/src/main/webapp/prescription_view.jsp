@@ -151,6 +151,10 @@
 
 					<!-- Action Buttons -->
 					<div class="d-flex flex-wrap gap-3 pt-3 border-top justify-content-center justify-content-md-start">
+						<button type="button" class="btn text-white rounded-pill px-4 py-3 fw-bold shadow-sm" style="background: #0e7490;"
+							onclick="openEReceiptModal('<%= appt != null ? appt.getFullName() : "Patient" %>', 'PAT-<%= session.getAttribute("userObj") != null ? ((com.hms.entity.User)session.getAttribute("userObj")).getId() : 101 %>', 'Dr. <%= doctor != null ? doctor.getFullName() : "Specialist" %>', '<%= doctor != null ? doctor.getSpecialist() : "General Medicine" %>', '<%= appt != null ? appt.getAppointmentDate() : "Today" %>', '<%= appt != null ? appt.getAppointmentTime() : "10:30 AM" %>', '<%= appt != null ? appt.getTokenNo() : "A-015" %>', '500', '<%= appt != null ? appt.getDiseases() : "" %>', '<%= rx.getRemarks() != null ? rx.getRemarks().replace("'", "\\'").replace("\n", " ") : "" %>', currentRxMeds)">
+							<i class="fa-solid fa-file-invoice-dollar me-2"></i> Download "E-receipt" <span>↗</span>
+						</button>
 						<a href="cart.jsp" class="btn btn-coral rounded-pill px-4 py-3 fw-bold">
 							<i class="fa-solid fa-cart-shopping me-2"></i> View Medicine Cart
 						</a>
@@ -175,6 +179,23 @@
 		<% } %>
 	</div>
 
-	<%@include file="component/footer.jsp"%>
+<script>
+var currentRxMeds = [
+<% if (rx != null && rx.getItems() != null) {
+     for (int i = 0; i < rx.getItems().size(); i++) {
+       PrescriptionMedicine item = rx.getItems().get(i);
+       String mName = item.getMedicine() != null ? item.getMedicine().getName() : "Medicine";
+       String mDose = item.getDosageInstructions() != null ? item.getDosageInstructions() : "As directed";
+%>
+  { name: '<%= mName.replace("'", "\\'") %>', dosage: '<%= mDose.replace("'", "\\'") %>', instructions: 'Qty: <%= item.getQuantity() %>' }<%= i < rx.getItems().size() - 1 ? "," : "" %>
+<%   }
+   }
+%>
+];
+</script>
+
+<%@include file="component/ereceipt_modal.jsp"%>
+<%@include file="component/footer.jsp"%>
 </body>
 </html>
+

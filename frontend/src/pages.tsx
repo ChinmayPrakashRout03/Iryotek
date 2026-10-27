@@ -26,6 +26,7 @@ import CatalogPage from './catalog'
 import AuthView from './AuthView'
 import { YouPIModal, type YouPIPaymentResult } from './YouPIModal'
 import { allMedicalFields, resolveMedicalField } from './data/medical-fields'
+import { AppointmentReceiptModal } from './AppointmentReceiptModal'
 
 type Appointment = {
   id: string
@@ -892,6 +893,7 @@ function AppointmentsPage({ notify }: { notify: (text: string) => void }) {
   const [booking, setBooking] = useState(false)
   const [isPaymentOpen, setIsPaymentOpen] = useState(false)
   const [cancellingAppointment, setCancellingAppointment] = useState<Appointment | null>(null)
+  const [selectedReceiptAppointment, setSelectedReceiptAppointment] = useState<any | null>(null)
   const [doctorSearch, setDoctorSearch] = useState('')
   const [specialtyFilter, setSpecialtyFilter] = useState('All specialties')
   const [specialtiesList, setSpecialtiesList] = useState<string[]>(['All specialties'])
@@ -1727,9 +1729,33 @@ function AppointmentsPage({ notify }: { notify: (text: string) => void }) {
           </button>
         </div>
         {confirmed && (
-          <div className="inline-success" role="status" style={{ marginTop: '14px', padding: '12px 14px', borderRadius: '10px', background: '#ecfdf5', border: '1px solid #a7f3d0', color: '#065f46', fontSize: '13px' }}>
-            <div style={{ fontWeight: 700, marginBottom: '4px' }}>
-              ✓ In-Clinic OPD Appointment Reserved (Token #{state.appointments[state.appointments.length - 1]?.id || 'NEW'})!
+          <div className="inline-success" role="status" style={{ marginTop: '14px', padding: '14px 16px', borderRadius: '12px', background: '#ecfdf5', border: '1px solid #a7f3d0', color: '#065f46', fontSize: '13px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px', marginBottom: '8px' }}>
+              <div style={{ fontWeight: 800, fontSize: '14px', color: '#047857' }}>
+                ✓ In-Clinic OPD Appointment Reserved (Token #{state.appointments[state.appointments.length - 1]?.id || 'NEW'})!
+              </div>
+              <button
+                type="button"
+                className="button"
+                style={{
+                  background: '#059669',
+                  borderColor: '#059669',
+                  color: '#ffffff',
+                  fontWeight: 800,
+                  fontSize: '12px',
+                  padding: '7px 16px',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  boxShadow: '0 2px 8px rgba(5, 150, 105, 0.3)'
+                }}
+                onClick={() => {
+                  const latestAppt = state.appointments[state.appointments.length - 1]
+                  if (latestAppt) setSelectedReceiptAppointment(latestAppt)
+                }}
+              >
+                <span>📥</span> Download "E-receipt" <span>↗</span>
+              </button>
             </div>
             <div style={{ fontSize: '12px', lineHeight: 1.5 }}>
               Please visit <strong>{selectedHospital.name}</strong> ({selectedCity}) on <strong>{date}</strong> at <strong>{slot}</strong> for your in-person consultation with <strong>{selectedDoctor.name}</strong>. Status: <strong>Awaiting Doctor Approval</strong>.
@@ -1790,6 +1816,25 @@ function AppointmentsPage({ notify }: { notify: (text: string) => void }) {
                           ✓ Confirmed by doctor! Please arrive at <strong>{item.hospital || 'Hospital'}</strong> at <strong>{item.time}</strong> with Token #{item.id} for your consultation.
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', marginTop: '4px' }}>
+                          <button
+                            type="button"
+                            className="button"
+                            style={{
+                              background: '#0e7490',
+                              borderColor: '#0e7490',
+                              color: '#ffffff',
+                              fontWeight: 700,
+                              fontSize: '12px',
+                              padding: '7px 14px',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '6px',
+                              boxShadow: '0 2px 8px rgba(14, 116, 144, 0.25)'
+                            }}
+                            onClick={() => setSelectedReceiptAppointment(item)}
+                          >
+                            <span>📥</span> Download "E-receipt" <span>↗</span>
+                          </button>
                           <Link
                             to="/prescriptions"
                             className="button"
@@ -1819,9 +1864,19 @@ function AppointmentsPage({ notify }: { notify: (text: string) => void }) {
                       </div>
                     ) : (
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
-                        <span style={{ fontSize: '11px', color: '#b45309', fontWeight: 600, background: '#fef3c7', padding: '4px 8px', borderRadius: '4px' }}>
-                          ⏳ Awaiting doctor approval from hospital portal
-                        </span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                          <span style={{ fontSize: '11px', color: '#b45309', fontWeight: 600, background: '#fef3c7', padding: '4px 8px', borderRadius: '4px' }}>
+                            ⏳ Awaiting doctor approval from hospital portal
+                          </span>
+                          <button
+                            type="button"
+                            className="button secondary"
+                            style={{ fontSize: '11px', padding: '5px 12px', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                            onClick={() => setSelectedReceiptAppointment(item)}
+                          >
+                            <span>📥</span> Download "E-receipt"
+                          </button>
+                        </div>
                         <button
                           className="text-link"
                           style={{ color: '#dc2626' }}
@@ -1975,6 +2030,13 @@ function AppointmentsPage({ notify }: { notify: (text: string) => void }) {
         </div>
       </div>
     )}
+
+    {/* Official Appointment & Prescription E-Receipt Modal */}
+    <AppointmentReceiptModal
+      isOpen={Boolean(selectedReceiptAppointment)}
+      onClose={() => setSelectedReceiptAppointment(null)}
+      appointment={selectedReceiptAppointment}
+    />
     </>
   )
 }
