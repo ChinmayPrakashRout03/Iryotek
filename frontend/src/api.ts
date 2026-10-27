@@ -994,7 +994,7 @@ export function getSharedAppointments(): ApiAppointment[] {
     if (raw) {
       const parsed = JSON.parse(raw)
       if (Array.isArray(parsed)) {
-        return parsed.filter(a => a && a.patientName !== 'Planio' && !['APT-1081', 'APT-1082', 'APT-1083', 'APT-1084', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10'].includes(String(a.id)))
+        return parsed.filter(a => a && !['APT-1081', 'APT-1082', 'APT-1083', 'APT-1084'].includes(String(a.id)))
       }
     }
   } catch {}
@@ -1181,7 +1181,7 @@ try {
       if (rawAppt) {
         const parsed = JSON.parse(rawAppt)
         if (Array.isArray(parsed)) {
-          const cleaned = parsed.filter(a => a && a.patientName !== 'Planio' && !['APT-1081', 'APT-1082', 'APT-1083', 'APT-1084', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10'].includes(String(a.id)))
+          const cleaned = parsed.filter(a => a && !['APT-1081', 'APT-1082', 'APT-1083', 'APT-1084'].includes(String(a.id)))
           localStorage.setItem('iryotek_shared_appointments', JSON.stringify(cleaned))
         }
       }
@@ -1275,29 +1275,34 @@ export async function updateAppointmentStatus(appointmentId: string | number, st
 /**
  * Record an appointment into the backend database and shared storage
  */
-export async function bookAppointment(data: AppointmentData): Promise<{ status: string; appointmentId?: number; message?: string }> {
-  let res: { status: string; appointmentId?: number; message?: string }
+export async function bookAppointment(data: AppointmentData): Promise<{ status: string; appointmentId?: number; message?: string; tokenNo?: number; id?: string | number }> {
+  let res: { status: string; appointmentId?: number; message?: string; tokenNo?: number; id?: string | number }
   try {
-    res = await request<{ status: string; appointmentId?: number; message?: string }>('/appointments', {
+    res = await request<{ status: string; appointmentId?: number; message?: string; tokenNo?: number; id?: string | number }>('/appointments', {
       method: 'POST',
       body: JSON.stringify(data),
     })
   } catch {
+    const fallbackId = Math.floor(Math.random() * 900) + 100
     res = {
       status: 'success',
-      appointmentId: Math.floor(Math.random() * 900) + 100,
+      appointmentId: fallbackId,
+      tokenNo: fallbackId,
+      id: String(fallbackId),
       message: 'Demo appointment recorded successfully.',
     }
   }
 
   // Also save to shared appointments so doctor immediately sees it across user accounts
   try {
-    const apptId = res.appointmentId ? String(res.appointmentId) : String(Math.floor(Math.random() * 900) + 100)
+    const rawId = res.appointmentId || res.tokenNo || res.id || Math.floor(Math.random() * 900) + 100
+    const apptId = String(rawId)
     saveSharedAppointment({
       id: apptId,
-      tokenNo: res.appointmentId || Number(apptId),
+      tokenNo: Number(res.tokenNo || res.appointmentId || apptId),
       doctorId: data.doctorId,
       doctor: data.doctorName || 'Doctor',
+      doctorName: data.doctorName || 'Doctor',
       patientName: data.patientName,
       fullName: data.patientName,
       email: data.email,

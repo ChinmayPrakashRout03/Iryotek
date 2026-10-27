@@ -82,7 +82,7 @@ function loadUserState(): DemoState {
       const parsed = JSON.parse(stored)
       const rawAppointments = Array.isArray(parsed.appointments) ? parsed.appointments : []
       const mergedAppointments = rawAppointments
-        .filter((a: any) => a && a.patientName !== 'Planio' && !['APT-1081', 'APT-1082', 'APT-1083', 'APT-1084', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10'].includes(String(a.id)))
+        .filter((a: any) => a && !['APT-1081', 'APT-1082', 'APT-1083', 'APT-1084'].includes(String(a.id)))
         .map((a: any) => {
           const found = shared.find(s => String(s.id) === String(a.id) || (s.tokenNo && String(s.tokenNo) === String(a.id)))
           return found ? { ...a, status: found.status } : a
@@ -3332,12 +3332,12 @@ function DoctorPage({ notify }: { notify: (text: string) => void }) {
   const user = getStoredAuthUser()
   const profile = user?.patientProfile
 
-  // Clean up any legacy seeded mock appointments so doctor starts with clean real queue
+  // Clean up legacy mock IDs if any
   useEffect(() => {
-    if (state.appointments && state.appointments.some(a => ['APT-1081', 'APT-1082', 'APT-1083', 'APT-1084', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10'].includes(String(a.id)) || a.patientName === 'Planio')) {
+    if (state.appointments && state.appointments.some(a => ['APT-1081', 'APT-1082', 'APT-1083', 'APT-1084'].includes(String(a.id)))) {
       update(prev => ({
         ...prev,
-        appointments: prev.appointments.filter(a => !['APT-1081', 'APT-1082', 'APT-1083', 'APT-1084', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10'].includes(String(a.id)) && a.patientName !== 'Planio')
+        appointments: prev.appointments.filter(a => !['APT-1081', 'APT-1082', 'APT-1083', 'APT-1084'].includes(String(a.id)))
       }))
     }
   }, [state.appointments, update])
@@ -3349,6 +3349,7 @@ function DoctorPage({ notify }: { notify: (text: string) => void }) {
   const [medicine, setMedicine] = useState('Paracetamol 500 mg')
   const [instructions, setInstructions] = useState('Take 1 tablet after meals as directed.')
   const [showLifetimeArchive, setShowLifetimeArchive] = useState(false)
+  const [receiptAppt, setReceiptAppt] = useState<any>(null)
 
   const fetchLiveAppointments = useCallback(() => {
     setLoadingAppts(true)
@@ -3393,7 +3394,7 @@ function DoctorPage({ notify }: { notify: (text: string) => void }) {
         map.set(idKey, { ...map.get(idKey), ...a })
       }
     })
-    return Array.from(map.values()).filter(a => a && a.patientName !== 'Planio' && !['APT-1081', 'APT-1082', 'APT-1083', 'APT-1084', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10'].includes(String(a.id)))
+    return Array.from(map.values()).filter(a => a && !['APT-1081', 'APT-1082', 'APT-1083', 'APT-1084'].includes(String(a.id)))
   }, [backendAppointments, state.appointments])
 
   // Filter appointments specifically for this logged-in doctor

@@ -585,36 +585,74 @@ export async function verifyPhoneOtp(confirmationResult: any, code: string): Pro
    ========================================================================= */
 
 export async function doctorSignIn(email: string, pass: string): Promise<AuthUser> {
+  const cleanEmail = email.trim().toLowerCase()
   const doctors = getRegisteredDoctors()
-  const matched = doctors.find(d => d.email.toLowerCase() === email.toLowerCase() && d.password === pass)
+  const matched = doctors.find(d => d.email.toLowerCase() === cleanEmail && d.password === pass)
 
   if (matched) {
     const user: AuthUser = {
-      uid: matched.uid,
-      displayName: matched.displayName,
+      uid: matched.uid || ('doc_' + (matched.id || matched.doctorId || Math.floor(Math.random() * 100000))),
+      id: matched.id || matched.doctorId,
+      doctorId: matched.doctorId || matched.id,
+      displayName: matched.displayName || matched.name || `Dr. ${cleanEmail.split('@')[0]}`,
       email: matched.email,
       role: 'Doctor',
       authProvider: matched.authProvider || 'Hospital Doctor Dataset',
       access: matched.access || 'Clinical OPD, E-Prescriptions & Diagnosis',
-      specialist: matched.specialist,
-      hospital: matched.hospital
+      specialist: matched.specialist || matched.specialty,
+      hospital: matched.hospital || matched.hospitalName
     }
     setStoredUser(user)
     return user
   }
 
+  // Try authenticating with Central Hospital Backend API (/api/auth/login)
+  try {
+    const resp = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify({ email: cleanEmail, password: pass, role: 'doctor' })
+    })
+    if (resp.ok) {
+      const data = await resp.json()
+      if (data && data.status === 'success' && data.user) {
+        const u = data.user
+        const docName = u.fullName ? (u.fullName.startsWith('Dr.') ? u.fullName : `Dr. ${u.fullName}`) : `Dr. ${cleanEmail.split('@')[0]}`
+        const user: AuthUser = {
+          uid: 'doc_api_' + (u.id || Math.floor(Math.random() * 100000)),
+          id: u.id,
+          doctorId: u.id,
+          displayName: docName,
+          email: u.email || cleanEmail,
+          role: 'Doctor',
+          authProvider: 'Iryotek Central Hospital Database',
+          access: 'Clinical OPD, E-Prescriptions & Diagnosis',
+          specialist: u.specialty || u.specialist || 'General Medicine',
+          hospital: u.hospital || 'AIIMS Hospital Bhubaneswar'
+        }
+        setStoredUser(user)
+        return user
+      }
+    }
+  } catch (err) {
+    console.warn('[Doctor Auth] Backend authentication deferred:', err)
+  }
+
   // Check if doctor email exists with incorrect password
-  const emailMatched = doctors.find(d => d.email.toLowerCase() === email.toLowerCase())
+  const emailMatched = doctors.find(d => d.email.toLowerCase() === cleanEmail)
   if (emailMatched) {
     throw new Error("Incorrect clinical password. (Default seed doctor password is 'doctor123')")
   }
 
   // Allow signing in if valid clinical domain pattern (e.g., from 100k dataset)
-  if (email.toLowerCase().includes('doctor') || email.toLowerCase().includes('hospital') || email.toLowerCase().includes('@aiims') || email.toLowerCase().includes('@kims')) {
+  if (cleanEmail.includes('doctor') || cleanEmail.includes('hospital') || cleanEmail.includes('@aiims') || cleanEmail.includes('@kims')) {
+    const assignedId = Math.floor(Math.random() * 100000)
     const user: AuthUser = {
-      uid: 'doc_' + Math.floor(Math.random() * 100000),
-      displayName: 'Dr. ' + email.split('@')[0].split('.').map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(' '),
-      email,
+      uid: 'doc_' + assignedId,
+      id: assignedId,
+      doctorId: assignedId,
+      displayName: 'Dr. ' + cleanEmail.split('@')[0].split('.').map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(' '),
+      email: cleanEmail,
       role: 'Doctor',
       authProvider: 'Hospital Doctor Dataset (100k+ Records)',
       access: 'Clinical OPD, E-Prescriptions & Diagnosis',
