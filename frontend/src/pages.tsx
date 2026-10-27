@@ -78,23 +78,57 @@ function loadUserState(): DemoState {
     const stored = localStorage.getItem(key)
     const shared = getSharedAppointments()
     const sharedRxs = getSharedPrescriptions()
+
+    // 1. Map shared appointments from database & cross-session storage
+    const sharedMapped: Appointment[] = (shared || [])
+      .filter((s: any) => s && !['APT-1081', 'APT-1082', 'APT-1083', 'APT-1084'].includes(String(s.id)))
+      .map((s: any) => ({
+        id: String(s.id || s.tokenNo || '1'),
+        doctor: s.doctor || s.doctorName || 'Dr. Specialist',
+        date: s.date || s.appointmentDate || '2026-10-27',
+        time: s.time || s.appointmentTime || '09:00 AM',
+        specialty: s.specialty || 'General Physician',
+        status: s.status || 'Pending',
+        hospital: s.hospital || 'AIIMS Hospital Bhubaneswar',
+        hospitalCity: s.hospitalCity || 'Bhubaneswar',
+        fee: s.fee || 500,
+        paymentStatus: 'Paid',
+        paymentMethod: s.paymentMethod || 'UPI',
+        utr: s.utr,
+        patientName: s.patientName || s.fullName || 'Patient'
+      }))
+
+    // 2. Local state appointments
+    let rawAppointments: Appointment[] = []
+    let parsed: any = null
     if (stored) {
-      const parsed = JSON.parse(stored)
-      const rawAppointments = Array.isArray(parsed.appointments) ? parsed.appointments : []
-      const mergedAppointments = rawAppointments
-        .filter((a: any) => a && !['APT-1081', 'APT-1082', 'APT-1083', 'APT-1084'].includes(String(a.id)))
-        .map((a: any) => {
-          const found = shared.find(s => String(s.id) === String(a.id) || (s.tokenNo && String(s.tokenNo) === String(a.id)))
-          return found ? { ...a, status: found.status } : a
-        })
-      return {
-        appointments: mergedAppointments,
-        cart: Array.isArray(parsed.cart) ? parsed.cart : [],
-        order: Boolean(parsed.order),
-        prescription: Boolean(sharedRxs.length > 0),
-        orders: Array.isArray(parsed.orders) ? parsed.orders : [],
-        claims: Array.isArray(parsed.claims) ? parsed.claims : [],
+      try {
+        parsed = JSON.parse(stored)
+        if (Array.isArray(parsed.appointments)) {
+          rawAppointments = parsed.appointments
+        }
+      } catch (e) {}
+    }
+
+    // 3. Merge: shared mapped first, overlay local rawAppointments
+    const apptMap = new Map<string, Appointment>()
+    sharedMapped.forEach(a => apptMap.set(String(a.id), a))
+    rawAppointments.forEach((a: any) => {
+      if (a && a.id && !['APT-1081', 'APT-1082', 'APT-1083', 'APT-1084'].includes(String(a.id))) {
+        const idKey = String(a.id)
+        apptMap.set(idKey, { ...apptMap.get(idKey), ...a })
       }
+    })
+
+    const mergedAppointments = Array.from(apptMap.values())
+
+    return {
+      appointments: mergedAppointments,
+      cart: parsed && Array.isArray(parsed.cart) ? parsed.cart : [],
+      order: Boolean(parsed?.order),
+      prescription: Boolean(sharedRxs.length > 0 || parsed?.prescription),
+      orders: parsed && Array.isArray(parsed.orders) ? parsed.orders : [],
+      claims: parsed && Array.isArray(parsed.claims) ? parsed.claims : [],
     }
   } catch (e) {}
   return { ...seed }

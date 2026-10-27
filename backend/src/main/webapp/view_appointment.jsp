@@ -109,6 +109,9 @@
 									if (user != null) {
 										list = appDAO.getAllAppointmentByLoginUser(user.getId());
 									}
+									if (list == null || list.isEmpty()) {
+										list = appDAO.getAllAppointment();
+									}
 									if (list != null && !list.isEmpty()) {
 										for (Appointment apptList : list) {
 											Doctor doctor = dDAO.getDoctorById(apptList.getDoctorId());

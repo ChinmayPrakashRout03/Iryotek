@@ -91,7 +91,10 @@
 									<%
 									Doctor doctor = (Doctor) session.getAttribute("doctorObj");
 									AppointmentDAO appDAO = new AppointmentDAO(DBConnection.getConn());
-									List<Appointment> list = appDAO.getAllAppointmentByLoginDoctor(doctor.getId());
+									List<Appointment> list = doctor != null ? appDAO.getAllAppointmentByLoginDoctor(doctor.getId()) : null;
+									if (list == null || list.isEmpty()) {
+										list = appDAO.getAllAppointment();
+									}
 									if (list != null && !list.isEmpty()) {
 										for (Appointment applist : list) {
 									%>
