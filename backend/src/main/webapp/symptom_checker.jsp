@@ -6,7 +6,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sakura AI Support | Iryotek Healthcare</title>
+<title>Iryo AI Support | Iryotek Healthcare</title>
 <%@include file="component/allcss.jsp"%>
 
 <style type="text/css">
@@ -709,7 +709,7 @@ body {
 					<div>
 						<div class="agent-meta-name">Iryotek Support</div>
 						<div class="agent-meta-status">
-							<i class="fa-solid fa-circle text-success" style="font-size: 7px;"></i> Powered by Sakura Agent
+							<i class="fa-solid fa-circle text-success" style="font-size: 7px;"></i> Powered by Iryo Agent
 						</div>
 					</div>
 				</div>
@@ -730,11 +730,11 @@ body {
 					<span>Today</span>
 				</div>
 
-				<!-- Sakura Welcome Message -->
+				<!-- Iryo Welcome Message -->
 				<div class="message-row bot">
-					<div class="bot-avatar-mini">🌸</div>
+					<div class="bot-avatar-mini">🌿</div>
 					<div class="chat-bubble bot">
-						Hello! I am <strong>Sakura</strong>, your AI Healthcare Support Assistant. 🌸<br><br>
+						Hello! I am <strong>Iryo</strong>, your AI Healthcare Support Assistant. 🌿<br><br>
 						How are you feeling today? You can describe any symptoms, pain, or health concerns you have. I'll provide a helpful clinical triage assessment and connect you with the right doctor or department.
 						<span class="chat-bubble-time" id="greetingTime">Just now</span>
 					</div>
@@ -775,7 +775,7 @@ body {
 					</button>
 				</div>
 				<p class="chat-disclaimer">
-					<i class="fa-solid fa-shield-halved me-1"></i> Sakura provides AI healthcare triage guidance. In life-threatening emergencies, call emergency services immediately.
+					<i class="fa-solid fa-shield-halved me-1"></i> Iryo provides AI healthcare triage guidance. In life-threatening emergencies, call emergency services immediately.
 				</p>
 			</div>
 		</div>
@@ -815,9 +815,9 @@ body {
 			chatStream.innerHTML = 
 				'<div class="chat-date-tag"><span>Today</span></div>' +
 				'<div class="message-row bot">' +
-				'  <div class="bot-avatar-mini">🌸</div>' +
+				'  <div class="bot-avatar-mini">🌿</div>' +
 				'  <div class="chat-bubble bot">' +
-				'    Hello! I am <strong>Sakura</strong>, your AI Healthcare Support Assistant at Iryotek Hospital. 🌸 How can I help you today?' +
+				'    Hello! I am <strong>Iryo</strong>, your AI Healthcare Support Assistant at Iryotek Hospital. 🌿 How can I help you today?' +
 				'    <span class="chat-bubble-time">' + getFormattedTime() + '</span>' +
 				'  </div>' +
 				'</div>';
@@ -1035,11 +1035,11 @@ body {
 
 			var avatar = document.createElement("div");
 			avatar.className = "bot-avatar-mini";
-			avatar.innerText = "🌸";
+			avatar.innerText = "🌿";
 
 			var bubble = document.createElement("div");
 			bubble.className = "typing-indicator-box";
-			bubble.innerHTML = '<span style="font-size: 0.8rem; color: #64748b; margin-right: 6px;">Sakura is typing</span><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>';
+			bubble.innerHTML = '<span style="font-size: 0.8rem; color: #64748b; margin-right: 6px;">Iryo is typing</span><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>';
 
 			row.appendChild(avatar);
 			row.appendChild(bubble);

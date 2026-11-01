@@ -39,7 +39,13 @@ import com.hms.entity.User;
 @WebServlet("/aiSymptomCheck")
 public class AISymptomServlet extends HttpServlet {
 
-    private static final String DEFAULT_API_KEY = "AQ.Ab8RN6K0NnN_Ehi9RrmLReEAq5C2d1ZKEWcbcbMkY_x-6ggk_A";
+    private static final String DEFAULT_OPENROUTER_API_KEY = "";
+    private static final String OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1";
+    private static final String OPENROUTER_MODEL_NEMOTRON = "nvidia/nemotron-3.5-lightning:free";
+    private static final String OPENROUTER_MODEL_GEMMA = "google/gemma-4-31b-it:free";
+    private static final String OPENROUTER_MODEL_LFM = "liquid/lfm-2.5-2.6b:free";
+
+    private static final String DEFAULT_API_KEY = "";
     private static final String PRIMARY_MODEL = "gemini-3.5-flash-lite";
     private static final String BACKUP_MODEL = "gemini-3.6-flash";
 
@@ -48,19 +54,43 @@ public class AISymptomServlet extends HttpServlet {
         + "are provided solely to assist patients and doctors prior to consultation. It is NOT a confirmed medical diagnosis. "
         + "Final diagnosis and treatment plans require in-person evaluation by a licensed healthcare professional.";
 
-    private static final String SAKURA_SYSTEM_PROMPT =
-        "You are Sakura, an AI-powered Healthcare and Clinical Assistant at Iryotek Hospital.\n"
-        + "Your purpose is to provide safe, clear, empathetic healthcare triage and differential diagnosis preparation for patients and consulting doctors.\n\n"
-        + "IMPORTANT IDENTITY & LEGAL COMPLIANCE:\n"
-        + "You are NOT a replacement for a licensed doctor or emergency service.\n"
-        + "Never state that a diagnosis is confirmed. Always explicitly present differentials with probability/confidence levels.\n"
-        + "Your role is to:\n"
-        + "1. Analyze patient-reported symptoms systematically.\n"
-        + "2. Identify urgency levels (Emergency, Urgent, Routine, Self-Care).\n"
+    private static final String IRYO_SYSTEM_PROMPT =
+        "You are Iryo, the dedicated AI Healthcare, Clinical, and Hospital Assistant at Iryotek Hospital.\n"
+        + "Your purpose is to provide safe, clear, empathetic healthcare triage, symptom guidance, and differential diagnosis preparation for patients and consulting doctors.\n\n"
+        + "==================================================\n"
+        + "PATIENT GREETINGS & RAPPORT PROTOCOL:\n"
+        + "==================================================\n"
+        + "When a patient greets you (e.g., \"hi\", \"hello\", \"hey\", \"good morning\", \"namaste\", \"how are you\"):\n"
+        + "1. ALWAYS greet them back warmly, politely, and reassuringly as Iryo! (e.g. \"Hello! Welcome to Iryotek Hospital. I'm Iryo, your AI clinical assistant. How are you feeling today? What symptoms or health-related questions can I help you with?\")\n"
+        + "2. Never treat a friendly greeting or hello as a domain violation or off-topic error.\n"
+        + "3. Reassure the patient that you are ready to listen and answer their health-related questions or evaluate any symptoms they may experience.\n"
+        + "4. For pure greetings or polite conversation where no illness or symptoms have been shared yet, DO NOT invent or display any differential diagnoses.\n"
+        + "Always append at the end:\n"
+        + "[TRIAGE: MONITOR]\n"
+        + "[SPECIALTY: General Medicine]\n"
+        + "[DIFFERENTIAL_DIAGNOSES: []]\n\n"
+        + "==================================================\n"
+        + "STRICT DOMAIN BOUNDARY & GUARDRAILS (CRITICAL RULE):\n"
+        + "==================================================\n"
+        + "You are EXCLUSIVELY authorized to reply to HEALTHCARE, MEDICAL, CLINICAL, WELLNESS, SYMPTOM, TRIAGE, MEDICATION, DOCTOR APPOINTMENT, AND HOSPITAL-RELATED queries.\n"
+        + "Polite conversation and greetings from patients (\"hi\", \"hello\", \"thanks\", \"bye\") ARE allowed and encouraged.\n"
+        + "You MUST STRICTLY REFUSE any query completely outside of medicine, healthcare, or hospital care (such as movies, fictional characters like Harry Potter, programming code, politics, gaming, finance, creative writing).\n\n"
+        + "If the user asks an off-topic non-medical question, respond politely:\n"
+        + "\"I am Iryo, a specialized healthcare clinical assistant at Iryotek Hospital. I can only assist with healthcare, symptoms, medical triage, appointments, and wellness queries. Please feel free to describe any symptoms or health concerns you may have.\"\n"
+        + "followed by the tags:\n"
+        + "[TRIAGE: MONITOR]\n"
+        + "[SPECIALTY: General Medicine]\n"
+        + "[DIFFERENTIAL_DIAGNOSES: []]\n\n"
+        + "==================================================\n"
+        + "CLINICAL TRIAGE PROTOCOL FOR HEALTHCARE QUERIES:\n"
+        + "==================================================\n"
+        + "1. Analyze patient-reported symptoms systematically and empathetically.\n"
+        + "2. Identify urgency levels (Emergency, Urgent, Routine, Monitor).\n"
         + "3. Generate a clinically reasoned list of potential differential diagnoses with realistic confidence scores (e.g. 10% to 95%).\n"
-        + "4. Explain supporting symptom evidence and recommended medical next steps.\n"
+        + "4. Explain supporting symptom evidence and recommended next medical steps.\n"
         + "5. Connect patients to appropriate Iryotek Hospital medical specialties.\n"
-        + "6. Maintain a calm, empathetic, and professional tone in English, Hindi, or Hinglish as chosen by user.\n\n"
+        + "6. Maintain a calm, empathetic, and professional tone in English, Hindi, or Hinglish as chosen by user.\n"
+        + "7. You are NOT a replacement for a licensed doctor or emergency service. Never state that a diagnosis is confirmed.\n\n"
         + "==================================================\n"
         + "MANDATORY MACHINE TAGS (ALWAYS APPEND AT THE VERY END ON NEW LINES)\n"
         + "==================================================\n"
@@ -68,8 +98,7 @@ public class AISymptomServlet extends HttpServlet {
         + "[SPECIALTY: Cardiology | Orthopedics | Dermatology | Neurology | ENT | Ophthalmology | Gastroenterology | Pulmonology | Pediatrics | Urology | Oncology | General Medicine | Psychiatry | Gynecology]\n"
         + "[DIFFERENTIAL_DIAGNOSES: [\n"
         + "  {\"condition\": \"Condition Name 1\", \"confidence\": 80, \"reasoning\": \"Key symptom alignment\", \"recommendations\": \"Recommended tests/actions\"},\n"
-        + "  {\"condition\": \"Condition Name 2\", \"confidence\": 60, \"reasoning\": \"Secondary possibility rationale\", \"recommendations\": \"Clinical observation\"},\n"
-        + "  {\"condition\": \"Condition Name 3\", \"confidence\": 35, \"reasoning\": \"Alternative less likely differential\", \"recommendations\": \"Differential workup\"}\n"
+        + "  {\"condition\": \"Condition Name 2\", \"confidence\": 60, \"reasoning\": \"Secondary possibility rationale\", \"recommendations\": \"Clinical observation\"}\n"
         + "]]";
 
     private final Gson gson = new Gson();
@@ -94,12 +123,34 @@ public class AISymptomServlet extends HttpServlet {
         if (userMessage.equalsIgnoreCase("__reset__") || userMessage.equalsIgnoreCase("reset chat")) {
             ChatSessionManager.clearHistory(session);
             JsonObject res = new JsonObject();
-            res.addProperty("analysis", "Chat session refreshed. How can I assist you with your health today? 🌸");
+            res.addProperty("analysis", "Chat session refreshed. How can I assist you with your health today? 🌿");
             res.addProperty("triageLevel", "MONITOR");
             res.addProperty("triageBadge", "🟢 Self-Care / Monitoring");
             res.addProperty("isEmergency", false);
+            res.addProperty("assistantName", "Iryo");
             res.addProperty("disclaimer", CLINICAL_DISCLAIMER);
             res.add("differentialDiagnoses", new JsonArray());
+            out.print(gson.toJson(res));
+            out.flush();
+            return;
+        }
+
+        // Fast-path for friendly patient greetings and introductory conversation
+        if (isGreeting(userMessage)) {
+            String greetingReply = "Hello! Welcome to Iryotek Hospital. I'm Iryo, your AI clinical health companion. 🌿\n\nHow are you feeling today? Please feel free to describe any symptoms, health concerns, or medical questions you have. I'm here to listen, answer your questions, and guide you to the right care.";
+            ChatSessionManager.addTurn(session, "user", userMessage);
+            ChatSessionManager.addTurn(session, "model", greetingReply);
+
+            JsonObject res = new JsonObject();
+            res.addProperty("analysis", greetingReply);
+            res.addProperty("specialty", "General Medicine");
+            res.addProperty("triageLevel", "MONITOR");
+            res.addProperty("triageBadge", "🟢 Welcoming Patient");
+            res.addProperty("isEmergency", false);
+            res.addProperty("assistantName", "Iryo");
+            res.addProperty("disclaimer", CLINICAL_DISCLAIMER);
+            res.add("differentialDiagnoses", new JsonArray());
+            res.add("suggestedDoctors", new JsonArray());
             out.print(gson.toJson(res));
             out.flush();
             return;
@@ -139,18 +190,38 @@ public class AISymptomServlet extends HttpServlet {
             String roughSpecialty = detectSpecialtyRough(userMessage);
             String ragContext = HospitalKnowledgeBase.buildRAGContext(roughSpecialty);
 
+            // Primary Engine: OpenRouter NVIDIA Nemotron 3.5 Lightning (User's provided configuration)
             try {
-                aiResponseText = callGeminiAPIWithSession(session, userMessage, ragContext, PRIMARY_MODEL);
-            } catch (Exception e) {
-                System.err.println("Primary model (" + PRIMARY_MODEL + ") failed: " + e.getMessage());
+                aiResponseText = callOpenRouterAPIWithSession(session, userMessage, ragContext, OPENROUTER_MODEL_NEMOTRON);
+            } catch (Exception eOpenRouter1) {
+                System.err.println("OpenRouter Nemotron primary model failed: " + eOpenRouter1.getMessage());
+                // Fallback 1: OpenRouter Gemma 4 31B
                 try {
-                    aiResponseText = callGeminiAPIWithSession(session, userMessage, ragContext, BACKUP_MODEL);
-                } catch (Exception e2) {
-                    System.err.println("Backup model (" + BACKUP_MODEL + ") failed: " + e2.getMessage());
+                    aiResponseText = callOpenRouterAPIWithSession(session, userMessage, ragContext, OPENROUTER_MODEL_GEMMA);
+                } catch (Exception eOpenRouter2) {
+                    System.err.println("OpenRouter Gemma fallback model failed: " + eOpenRouter2.getMessage());
+                    // Fallback 2: OpenRouter LFM 2.5
+                    try {
+                        aiResponseText = callOpenRouterAPIWithSession(session, userMessage, ragContext, OPENROUTER_MODEL_LFM);
+                    } catch (Exception eOpenRouter3) {
+                        System.err.println("OpenRouter LFM fallback model failed: " + eOpenRouter3.getMessage());
+                        // Fallback 3: Gemini Primary
+                        try {
+                            aiResponseText = callGeminiAPIWithSession(session, userMessage, ragContext, PRIMARY_MODEL);
+                        } catch (Exception eGemini) {
+                            System.err.println("Gemini Primary model (" + PRIMARY_MODEL + ") failed: " + eGemini.getMessage());
+                            // Fallback 4: Gemini Backup
+                            try {
+                                aiResponseText = callGeminiAPIWithSession(session, userMessage, ragContext, BACKUP_MODEL);
+                            } catch (Exception eBackup) {
+                                System.err.println("Gemini Backup model (" + BACKUP_MODEL + ") failed: " + eBackup.getMessage());
+                            }
+                        }
+                    }
                 }
             }
 
-            // Fallback rules engine if API is offline
+            // Fallback rules engine if external APIs are offline
             if (aiResponseText == null || aiResponseText.trim().isEmpty()) {
                 aiResponseText = generateSmartMedicalResponse(userMessage);
             }
@@ -173,8 +244,12 @@ public class AISymptomServlet extends HttpServlet {
 
             if (tagExt.differentialDiagnoses != null && tagExt.differentialDiagnoses.size() > 0) {
                 differentialArray = tagExt.differentialDiagnoses;
-            } else {
+            } else if (tagExt.differentialDiagnoses != null && tagExt.differentialDiagnoses.size() == 0) {
+                differentialArray = new JsonArray();
+            } else if (hasClinicalSymptoms(userMessage, aiResponseText)) {
                 differentialArray = generateDifferentialDiagnoses(userMessage, aiResponseText, detectedSpecialty, false);
+            } else {
+                differentialArray = new JsonArray();
             }
 
             triageBadge = mapTriageBadge(triageLevel);
@@ -246,13 +321,74 @@ public class AISymptomServlet extends HttpServlet {
         result.addProperty("triageBadge", triageBadge);
         result.addProperty("isEmergency", isEmergency);
         result.addProperty("emergencyHelpline", "+202-555-0191");
-        result.addProperty("assistantName", "Sakura");
+        result.addProperty("assistantName", "Iryo");
         result.addProperty("disclaimer", CLINICAL_DISCLAIMER);
         result.add("differentialDiagnoses", differentialArray);
         result.add("suggestedDoctors", docArray);
 
         out.print(gson.toJson(result));
         out.flush();
+    }
+
+    private String callOpenRouterAPIWithSession(HttpSession session, String userMessage, String ragContext, String modelName) throws Exception {
+        String apiKey = System.getenv("OPENROUTER_API_KEY");
+        if (apiKey == null || apiKey.trim().isEmpty()) {
+            apiKey = DEFAULT_OPENROUTER_API_KEY;
+        }
+
+        String url = OPENROUTER_BASE_URL + "/chat/completions";
+        String fullSystemPrompt = IRYO_SYSTEM_PROMPT + "\n\n" + ragContext;
+
+        JsonObject payload = new JsonObject();
+        payload.addProperty("model", modelName);
+        payload.add("messages", ChatSessionManager.buildOpenAIMessages(session, userMessage, fullSystemPrompt));
+        payload.addProperty("temperature", 0.7);
+        payload.addProperty("top_p", 0.95);
+        payload.addProperty("max_tokens", 4096);
+
+        String jsonPayload = gson.toJson(payload);
+
+        HttpClient client = HttpClient.newBuilder()
+                .connectTimeout(Duration.ofSeconds(10))
+                .build();
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(url))
+                .header("Authorization", "Bearer " + apiKey)
+                .header("Content-Type", "application/json")
+                .header("Accept", "application/json")
+                .header("HTTP-Referer", "https://iryotek.hospital")
+                .header("X-Title", "Iryotek Hospital AI Companion")
+                .timeout(Duration.ofSeconds(60))
+                .POST(HttpRequest.BodyPublishers.ofString(jsonPayload, StandardCharsets.UTF_8))
+                .build();
+
+        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+        String responseBody = response.body();
+
+        if (response.statusCode() == 200 && responseBody != null && !responseBody.trim().isEmpty()) {
+            JsonObject root = JsonParser.parseString(responseBody).getAsJsonObject();
+            if (root.has("choices")) {
+                JsonArray choices = root.getAsJsonArray("choices");
+                if (choices.size() > 0) {
+                    JsonObject choice = choices.get(0).getAsJsonObject();
+                    if (choice.has("message")) {
+                        JsonObject msgObj = choice.getAsJsonObject("message");
+                        if (msgObj.has("content") && !msgObj.get("content").isJsonNull() && !msgObj.get("content").getAsString().trim().isEmpty()) {
+                            return msgObj.get("content").getAsString();
+                        } else if (msgObj.has("reasoning") && !msgObj.get("reasoning").isJsonNull() && !msgObj.get("reasoning").getAsString().trim().isEmpty()) {
+                            return msgObj.get("reasoning").getAsString();
+                        } else if (msgObj.has("reasoning_content") && !msgObj.get("reasoning_content").isJsonNull() && !msgObj.get("reasoning_content").getAsString().trim().isEmpty()) {
+                            return msgObj.get("reasoning_content").getAsString();
+                        }
+                    }
+                }
+            }
+        } else {
+            throw new RuntimeException("OpenRouter API returned status " + response.statusCode() + ": " + responseBody);
+        }
+
+        return "";
     }
 
     private String callGeminiAPIWithSession(HttpSession session, String userMessage, String ragContext, String modelName) throws Exception {
@@ -270,7 +406,7 @@ public class AISymptomServlet extends HttpServlet {
         JsonObject systemInstruction = new JsonObject();
         JsonArray sysParts = new JsonArray();
         JsonObject sysPart = new JsonObject();
-        String fullSystemPrompt = SAKURA_SYSTEM_PROMPT + "\n\n" + ragContext;
+        String fullSystemPrompt = IRYO_SYSTEM_PROMPT + "\n\n" + ragContext;
         sysPart.addProperty("text", fullSystemPrompt);
         sysParts.add(sysPart);
         systemInstruction.add("parts", sysParts);
@@ -525,9 +661,21 @@ public class AISymptomServlet extends HttpServlet {
     private String generateSmartMedicalResponse(String msg) {
         String lower = msg.toLowerCase();
 
+        // Check for common non-medical queries to enforce strict domain guardrail even in fallback
+        if (lower.contains("harry potter") || lower.contains("movie") || lower.contains("film")
+                || lower.contains("song") || lower.contains("music") || lower.contains("game")
+                || lower.contains("weather") || lower.contains("joke") || lower.contains("poem")
+                || lower.contains("python") || lower.contains("java code") || lower.contains("politics")
+                || lower.contains("president") || lower.contains("sports") || lower.contains("cricket")) {
+            return "I am Iryo, a specialized healthcare clinical assistant at Iryotek Hospital. I can only assist with healthcare, symptoms, medical triage, appointments, and wellness queries. Please feel free to describe any symptoms or health concerns you may have.\n\n"
+                 + "[TRIAGE: MONITOR]\n"
+                 + "[SPECIALTY: General Medicine]\n"
+                 + "[DIFFERENTIAL_DIAGNOSES: []]";
+        }
+
         // 1. Greetings & Introductions
         if (lower.matches("^(hi|hello|hey|greetings|good morning|good afternoon|good evening)[!.]?$") || lower.equals("help")) {
-            return "Hello! I am **Sakura**, your AI Healthcare & Hospital Assistant at Iryotek Hospital. 🌸\n\n"
+            return "Hello! I am **Iryo**, your AI Healthcare & Hospital Assistant at Iryotek Hospital. 🌿\n\n"
                  + "I can assist you with:\n"
                  + "• Symptom analysis & differential diagnosis probability assessment\n"
                  + "• Pre-consultation clinical summary preparation for your doctor\n"
@@ -539,7 +687,7 @@ public class AISymptomServlet extends HttpServlet {
 
         // 2. Who are you / Identity
         if (lower.contains("who are you") || lower.contains("what can you do") || lower.contains("your name")) {
-            return "I am **Sakura**, Iryotek Hospital's AI Clinical Assistant. I analyze patient symptoms to provide prioritized differential diagnoses with confidence scores, prepare clinical summaries for our doctors, and guide you to the right department.";
+            return "I am **Iryo**, Iryotek Hospital's AI Clinical Assistant. I analyze patient symptoms to provide prioritized differential diagnoses with confidence scores, prepare clinical summaries for our doctors, and guide you to the right department.";
         }
 
         // 3. Appointment Requests
@@ -569,5 +717,27 @@ public class AISymptomServlet extends HttpServlet {
              + "We recommend booking a consultation with our hospital specialist for formal clinical evaluation and targeted diagnostic testing.\n\n"
              + "[TRIAGE: ROUTINE]\n"
              + "[SPECIALTY: General Medicine]";
+    }
+
+    private static boolean isGreeting(String msg) {
+        if (msg == null) return false;
+        String clean = msg.trim().toLowerCase().replaceAll("[!?,.]+$", "").trim();
+        return clean.matches("^(hi|hello|hey|heyy|heya|hola|namaste|vanakkam|good morning|good afternoon|good evening|good day|howdy|sup|hi there|hello there|hi doctor|hello doctor|hi iryo|hello iryo|hey iryo|how are you|how are you doing|who are you|greetings|start|can you help me)$");
+    }
+
+    private static boolean hasClinicalSymptoms(String userMsg, String aiText) {
+        String combined = ((userMsg != null ? userMsg : "") + " " + (aiText != null ? aiText : "")).toLowerCase();
+        String[] keywords = {
+            "pain", "ache", "fever", "cough", "cold", "sore", "vomit", "nausea",
+            "dizzy", "dizziness", "rash", "itch", "swelling", "bleeding", "breath",
+            "shortness", "headache", "stomach", "chest", "throat", "fatigue",
+            "tired", "weak", "infection", "cramp", "pressure", "burn", "burning",
+            "diarrhea", "constipation", "sneezing", "congestion", "sinus", "allergy",
+            "injury", "sprain", "fracture", "cut", "wound", "palpitation"
+        };
+        for (String kw : keywords) {
+            if (combined.contains(kw)) return true;
+        }
+        return false;
     }
 }

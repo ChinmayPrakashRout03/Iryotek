@@ -2,7 +2,7 @@
 
 <!-- Floating Circular AI Support Assistant Icon (FAB) -->
 <div class="floating-ai-support-trigger">
-	<button type="button" class="btn-ai-support-fab" onclick="toggleSupportWidget()" title="Sakura AI Support Assistant">
+	<button type="button" class="btn-ai-support-fab" onclick="toggleSupportWidget()" title="Iryo AI Support Assistant">
 		<i class="fa-solid fa-headset"></i>
 	</button>
 </div>
@@ -25,7 +25,7 @@
 			<div class="support-new-card" onclick="openChatThread()">
 				<div>
 					<div class="fw-bold text-dark fs-6 mb-1">Iryotek Support</div>
-					<div class="text-secondary fs-7">Powered by Sakura Agent</div>
+					<div class="text-secondary fs-7">Powered by Iryo Agent</div>
 				</div>
 				<div class="support-send-icon">
 					<i class="fa-solid fa-paper-plane" style="color: #0288d1;"></i>
@@ -49,7 +49,7 @@
 			<div class="support-new-card-bordered" onclick="openChatThread()">
 				<div>
 					<div class="fw-bold text-dark fs-6 mb-1">Iryotek Support</div>
-					<div class="text-muted fs-7">Powered by Sakura Agent</div>
+					<div class="text-muted fs-7">Powered by Iryo Agent</div>
 				</div>
 				<div class="support-send-icon">
 					<i class="fa-solid fa-paper-plane" style="color: #0288d1;"></i>
@@ -79,7 +79,7 @@
 				<i class="fa-solid fa-chevron-left cursor-pointer me-1" onclick="switchSupportTab('messages')"></i>
 				<div>
 					<div class="fw-bold fs-6 text-white leading-tight">Iryotek Support</div>
-					<div class="fs-8 text-white-50"><i class="fa-solid fa-circle text-success fs-9 me-1"></i> Powered by Sakura Agent</div>
+					<div class="fs-8 text-white-50"><i class="fa-solid fa-circle text-success fs-9 me-1"></i> Powered by Iryo Agent</div>
 				</div>
 			</div>
 			<i class="fa-solid fa-xmark cursor-pointer fs-5" onclick="toggleSupportWidget()"></i>
@@ -92,7 +92,7 @@
 
 		<div id="chatMessagesBox" class="support-chat-messages">
 			<div class="chat-bubble bot-bubble">
-				Hello! I am <strong>Sakura</strong>, your AI Healthcare Support Assistant. 🌸 How can I help you today?
+				Hello! I am <strong>Iryo</strong>, your AI Healthcare Support Assistant. 🌿 How can I help you today?
 			</div>
 			<div class="chat-options-group" id="chatInitialOptions">
 				<button type="button" class="chat-opt-btn" onclick="sendQuickMsg('Book an Appointment')">📅 Book Appointment</button>
@@ -737,7 +737,7 @@ function sendQuickMsg(msgText) {
 			box.scrollTop = box.scrollHeight;
 		}, 250);
 	} else if (msgText === 'AI Symptom Checker') {
-		enableChatInput("Describe your symptoms to Sakura...");
+		enableChatInput("Describe your symptoms to Iryo...");
 		setTimeout(function() {
 			var box = document.getElementById("chatMessagesBox");
 			if (!box) return;
@@ -799,7 +799,7 @@ function appendBotResponse(query) {
 	var typingDiv = document.createElement("div");
 	typingDiv.className = "chat-bubble bot-bubble text-muted fs-8";
 	typingDiv.id = "supportTypingBubble";
-	typingDiv.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i> 🌸 Sakura AI is analyzing...';
+	typingDiv.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i> 🌿 Iryo AI is analyzing...';
 	box.appendChild(typingDiv);
 	box.scrollTop = box.scrollHeight;
 
@@ -824,7 +824,7 @@ function appendBotResponse(query) {
 			if (xhr.status === 200) {
 				try {
 					var res = JSON.parse(xhr.responseText);
-					var replyText = res.analysis || "I am Sakura, your AI clinical assistant at Iryotek Hospital.";
+					var replyText = res.analysis || "I am Iryo, your AI clinical assistant at Iryotek Hospital.";
 
 					var botDiv = document.createElement("div");
 					botDiv.className = "chat-bubble bot-bubble";

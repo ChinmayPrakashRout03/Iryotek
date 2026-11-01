@@ -5,6 +5,7 @@ import {
   type PatientHealthProfile,
   getStoredUser,
   setStoredUser,
+  initFirebase,
   loginPatientWithGoogle,
   loginPatientWithEmail,
   registerPatientWithEmail,
@@ -16,6 +17,7 @@ import {
   logoutUser,
   SEED_DATASET_DOCTORS,
 } from './auth'
+import { getPatientProfileFirestore } from './firestore'
 import { allMedicalFields } from './data/medical-fields'
 
 interface AuthViewProps {
@@ -158,8 +160,8 @@ export default function AuthView({ initialMode = 'signin', notify, onSuccess }: 
     } else {
       setSuccessMsg(msg)
       setErrorMsg('')
+      if (notify) notify(msg)
     }
-    if (notify) notify(msg)
   }
 
   const completeAuth = (user: AuthUser) => {
@@ -178,6 +180,38 @@ export default function AuthView({ initialMode = 'signin', notify, onSuccess }: 
       }
     }, 700)
   }
+
+  // Check for incoming redirect authentication (Firebase Auth Redirect Flow)
+  useEffect(() => {
+    let isMounted = true
+    const checkRedirect = async () => {
+      const auth = initFirebase()
+      if (!auth) return
+      try {
+        const result = await auth.getRedirectResult().catch(() => null)
+        if (result && result.user && isMounted) {
+          const u = result.user
+          const cloudProfile = await getPatientProfileFirestore(u.uid, u.email || undefined).catch(() => null)
+          const user: AuthUser = {
+            uid: u.uid,
+            displayName: cloudProfile?.fullName || u.displayName || u.email?.split('@')[0] || 'Patient User',
+            email: u.email || undefined,
+            photoURL: u.photoURL || undefined,
+            role: 'Patient',
+            authProvider: 'Google Auth',
+            access: 'Appointments, Telehealth & Pharmacy',
+            patientProfile: cloudProfile || undefined
+          }
+          setStoredUser(user)
+          completeAuth(user)
+        }
+      } catch (err: any) {
+        console.warn('[Iryotek Auth] getRedirectResult check:', err)
+      }
+    }
+    checkRedirect()
+    return () => { isMounted = false }
+  }, [])
 
   // Google Login (Firebase)
   const handleGoogleLogin = async () => {

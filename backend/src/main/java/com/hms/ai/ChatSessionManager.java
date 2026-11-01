@@ -11,7 +11,8 @@ import com.google.gson.JsonObject;
 
 public class ChatSessionManager {
 
-    private static final String SESSION_KEY = "SAKURA_CHAT_HISTORY";
+    private static final String SESSION_KEY = "IRYO_CHAT_HISTORY";
+    private static final String LEGACY_SESSION_KEY = "SAKURA_CHAT_HISTORY";
     private static final int MAX_HISTORY_TURNS = 10;
 
     public static class ChatTurn implements Serializable {
@@ -39,6 +40,10 @@ public class ChatSessionManager {
         Object obj = session.getAttribute(SESSION_KEY);
         if (obj instanceof List<?>) {
             return (List<ChatTurn>) obj;
+        }
+        Object legacyObj = session.getAttribute(LEGACY_SESSION_KEY);
+        if (legacyObj instanceof List<?>) {
+            return (List<ChatTurn>) legacyObj;
         }
         List<ChatTurn> list = new ArrayList<>();
         session.setAttribute(SESSION_KEY, list);
@@ -99,5 +104,37 @@ public class ChatSessionManager {
         contents.add(currentObj);
 
         return contents;
+    }
+
+    /**
+     * Builds standard OpenAI / NVIDIA chat completions messages array
+     * including system prompt, multi-turn history, and current user message.
+     */
+    public static JsonArray buildOpenAIMessages(HttpSession session, String currentMessage, String systemPrompt) {
+        JsonArray messages = new JsonArray();
+
+        if (systemPrompt != null && !systemPrompt.trim().isEmpty()) {
+            JsonObject sysObj = new JsonObject();
+            sysObj.addProperty("role", "system");
+            sysObj.addProperty("content", systemPrompt.trim());
+            messages.add(sysObj);
+        }
+
+        List<ChatTurn> history = getHistory(session);
+        for (ChatTurn turn : history) {
+            JsonObject turnObj = new JsonObject();
+            // Map "model" to "assistant" for OpenAI compatibility
+            String role = "model".equalsIgnoreCase(turn.getRole()) ? "assistant" : "user";
+            turnObj.addProperty("role", role);
+            turnObj.addProperty("content", turn.getContent());
+            messages.add(turnObj);
+        }
+
+        JsonObject curObj = new JsonObject();
+        curObj.addProperty("role", "user");
+        curObj.addProperty("content", currentMessage);
+        messages.add(curObj);
+
+        return messages;
     }
 }

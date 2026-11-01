@@ -34,6 +34,9 @@
 					aria-current="page" href="manage_medicines.jsp"><i
 						class="fa-solid fa-pills"></i> PHARMACY</a></li>
 				<li class="nav-item"><a class="nav-link active"
+					aria-current="page" href="manage_prescriptions.jsp"><i
+						class="fa-solid fa-prescription-bottle-medical"></i> DISPENSING QUEUE</a></li>
+				<li class="nav-item"><a class="nav-link active"
 					aria-current="page" href="manage_orders.jsp"><i
 						class="fa-solid fa-boxes-packing"></i> MEDICINE ORDERS</a></li>
 			</ul>

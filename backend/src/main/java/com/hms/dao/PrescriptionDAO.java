@@ -13,7 +13,7 @@ import com.hms.entity.PrescriptionMedicine;
 
 public class PrescriptionDAO {
 
-    private Connection conn;
+    private final Connection conn;
 
     public PrescriptionDAO(Connection conn) {
         super();
@@ -23,32 +23,66 @@ public class PrescriptionDAO {
     public int createPrescription(Prescription rx, List<PrescriptionMedicine> items) {
         int prescriptionId = -1;
         try {
-            String sql = "INSERT INTO prescription(appointment_id, user_id, doctor_id, remarks) VALUES(?,?,?,?)";
+            String sql = "INSERT INTO prescription(appointment_id, user_id, doctor_id, remarks, status) VALUES(?,?,?,?,?)";
             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
             ps.setInt(1, rx.getAppointmentId());
             ps.setInt(2, rx.getUserId());
             ps.setInt(3, rx.getDoctorId());
             ps.setString(4, rx.getRemarks());
+            ps.setString(5, rx.getStatus() != null ? rx.getStatus() : "APPROVED");
 
             int affected = ps.executeUpdate();
             if (affected > 0) {
-                ResultSet rs = ps.getGeneratedKeys();
-                if (rs.next()) {
-                    prescriptionId = rs.getInt(1);
+                try (ResultSet rs = ps.getGeneratedKeys()) {
+                    if (rs.next()) {
+                        prescriptionId = rs.getInt(1);
+                    }
                 }
             }
 
             if (prescriptionId > 0 && items != null && !items.isEmpty()) {
-                String itemSql = "INSERT INTO prescription_medicine(prescription_id, medicine_id, dosage_instructions, quantity) VALUES(?,?,?,?)";
-                PreparedStatement itemPs = conn.prepareStatement(itemSql);
+                String itemSql = "INSERT INTO prescription_medicine(" +
+                        "prescription_id, medicine_id, dosage_instructions, quantity, " +
+                        "medicine_name, strength, dosage_form, units_per_dose, frequency, " +
+                        "doses_per_day, duration_days, route, special_instructions, " +
+                        "calculated_quantity, calculation_breakdown, needs_clarification, clarification_reason, status) " +
+                        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
                 for (PrescriptionMedicine item : items) {
-                    itemPs.setInt(1, prescriptionId);
-                    itemPs.setInt(2, item.getMedicineId());
-                    itemPs.setString(3, item.getDosageInstructions() != null ? item.getDosageInstructions() : "As directed");
-                    itemPs.setInt(4, item.getQuantity() > 0 ? item.getQuantity() : 1);
-                    itemPs.addBatch();
+                    try (PreparedStatement itemPs = conn.prepareStatement(itemSql, Statement.RETURN_GENERATED_KEYS)) {
+                        int calcQty = item.getCalculatedQuantity() > 0 ? item.getCalculatedQuantity() : item.getQuantity();
+
+                        itemPs.setInt(1, prescriptionId);
+                        itemPs.setInt(2, item.getMedicineId());
+                        itemPs.setString(3, item.getDosageInstructions() != null ? item.getDosageInstructions() : "As directed");
+                        itemPs.setInt(4, item.getQuantity() > 0 ? item.getQuantity() : calcQty);
+                        itemPs.setString(5, item.getMedicineName() != null ? item.getMedicineName() : "");
+                        itemPs.setString(6, item.getStrength() != null ? item.getStrength() : "");
+                        itemPs.setString(7, item.getDosageForm() != null ? item.getDosageForm() : "Tablet");
+                        itemPs.setDouble(8, item.getUnitsPerDose() > 0 ? item.getUnitsPerDose() : 1.0);
+                        itemPs.setString(9, item.getFrequency() != null ? item.getFrequency() : "Once daily");
+                        itemPs.setDouble(10, item.getDosesPerDay() > 0 ? item.getDosesPerDay() : 1.0);
+                        itemPs.setInt(11, item.getDurationDays() > 0 ? item.getDurationDays() : 1);
+                        itemPs.setString(12, item.getRoute() != null ? item.getRoute() : "Oral");
+                        itemPs.setString(13, item.getSpecialInstructions() != null ? item.getSpecialInstructions() : "");
+                        itemPs.setInt(14, calcQty);
+                        itemPs.setString(15, item.getCalculationBreakdown() != null ? item.getCalculationBreakdown() : "");
+                        itemPs.setInt(16, item.isNeedsClarification() ? 1 : 0);
+                        itemPs.setString(17, item.getClarificationReason() != null ? item.getClarificationReason() : "");
+                        itemPs.setString(18, item.getStatus() != null ? item.getStatus() : "PENDING");
+
+                        itemPs.executeUpdate();
+                        try (ResultSet itemRs = itemPs.getGeneratedKeys()) {
+                            if (itemRs.next()) {
+                                item.setId(itemRs.getInt(1));
+                            }
+                        }
+                    }
                 }
-                itemPs.executeBatch();
+
+                // Automatically generate pharmacy dispensing request queue entries
+                PharmacyDAO pharmacyDAO = new PharmacyDAO(conn);
+                pharmacyDAO.createDispensingRequests(prescriptionId, rx.getUserId(), rx.getDoctorId(), items);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -126,6 +160,25 @@ public class PrescriptionDAO {
                     rs.getString("dosage_instructions"),
                     rs.getInt("quantity")
                 );
+
+                // Populate clinical structured fields
+                try {
+                    item.setMedicineName(rs.getString("medicine_name"));
+                    item.setStrength(rs.getString("strength"));
+                    item.setDosageForm(rs.getString("dosage_form"));
+                    item.setUnitsPerDose(rs.getDouble("units_per_dose"));
+                    item.setFrequency(rs.getString("frequency"));
+                    item.setDosesPerDay(rs.getDouble("doses_per_day"));
+                    item.setDurationDays(rs.getInt("duration_days"));
+                    item.setRoute(rs.getString("route"));
+                    item.setSpecialInstructions(rs.getString("special_instructions"));
+                    item.setCalculatedQuantity(rs.getInt("calculated_quantity"));
+                    item.setCalculationBreakdown(rs.getString("calculation_breakdown"));
+                    item.setNeedsClarification(rs.getInt("needs_clarification") == 1);
+                    item.setClarificationReason(rs.getString("clarification_reason"));
+                    item.setStatus(rs.getString("status"));
+                } catch (Exception ignored) {}
+
                 Medicine med = new Medicine(
                     rs.getInt("medicine_id"),
                     rs.getString("name"),
@@ -146,7 +199,7 @@ public class PrescriptionDAO {
     }
 
     private Prescription mapResultSetToPrescription(ResultSet rs) throws Exception {
-        return new Prescription(
+        Prescription p = new Prescription(
             rs.getInt("id"),
             rs.getInt("appointment_id"),
             rs.getInt("user_id"),
@@ -154,5 +207,10 @@ public class PrescriptionDAO {
             rs.getString("created_at"),
             rs.getString("remarks")
         );
+        try {
+            p.setStatus(rs.getString("status"));
+            p.setApprovedAt(rs.getString("approved_at"));
+        } catch (Exception ignored) {}
+        return p;
     }
 }

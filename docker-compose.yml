@@ -4,7 +4,7 @@ services:
     image: mysql:8.0
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: Chinmay980@
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
       MYSQL_DATABASE: hospital
     ports:
       - "3307:3306"
@@ -26,9 +26,10 @@ services:
     environment:
       # useSSL=false and allowPublicKeyRetrieval=true are required for MySQL 8+
       DB_URL: jdbc:mysql://db:3306/hospital?useSSL=false&allowPublicKeyRetrieval=true
-      DB_USER: root
-      DB_PASSWORD: Chinmay980@
-      GEMINI_API_KEY: AQ.Ab8RN6K0NnN_Ehi9RrmLReEAq5C2d1ZKEWcbcbMkY_x-6ggk_A
+      DB_USER: ${DB_USER:-root}
+      DB_PASSWORD: ${DB_PASSWORD:-root}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
     depends_on:
       db:
         condition: service_healthy

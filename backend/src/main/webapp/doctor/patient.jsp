@@ -180,7 +180,7 @@
 					<div class="d-flex align-items-center gap-2">
 						<i class="fa-solid fa-brain text-cyan fs-4"></i>
 						<div>
-							<h5 class="modal-title fw-bold mb-0" id="aiTriageModalLabel">Sakura AI Differential Triage Review</h5>
+							<h5 class="modal-title fw-bold mb-0" id="aiTriageModalLabel">Iryo AI Differential Triage Review</h5>
 							<small class="text-white-50" id="aiTriagePatientSubtitle">Patient Pre-Consultation Clinical File</small>
 						</div>
 					</div>
@@ -244,7 +244,7 @@
 		html += '<div class="card border-0 shadow-sm p-3 mb-3">'
 		      + '  <div class="d-flex justify-content-between align-items-center mb-2">'
 		      + '    <h6 class="fw-bold mb-0 text-dark"><i class="fa-solid fa-notes-medical text-primary me-2"></i> Evaluated Differential Diagnoses</h6>'
-		      + '    <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1 fs-8">Sakura AI Assessment</span>'
+		      + '    <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1 fs-8">Iryo AI Assessment</span>'
 		      + '  </div>';
 
 		if (data.aiDiagnosis && data.aiDiagnosis.differentialList && data.aiDiagnosis.differentialList.length > 0) {

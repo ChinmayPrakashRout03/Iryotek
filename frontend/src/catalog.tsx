@@ -1371,12 +1371,12 @@ function DoctorPrescriptionsView({ notify, onSwitchToPatient }: Props & { onSwit
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12, marginBottom: 14 }}>
                   <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
                     <span className="demo-user-avatar" style={{ width: 42, height: 42, fontSize: 12 }}>
-                      {rx.patientName.slice(0, 2).toUpperCase()}
+                      {(rx.patientName || 'PT').slice(0, 2).toUpperCase()}
                     </span>
                     <div>
-                      <h4 style={{ margin: 0, fontSize: 16 }}>{rx.patientName}</h4>
+                      <h4 style={{ margin: 0, fontSize: 16 }}>{rx.patientName || 'Registered Patient'}</h4>
                       <p style={{ margin: '3px 0 0', fontSize: 12, color: '#64748b' }}>
-                        Token #{rx.token} · {rx.patientAge} yrs ({rx.patientGender}) · Prescribed on {rx.date}
+                        Token #{rx.token || '001'} · {rx.patientAge || '30'} yrs ({rx.patientGender || 'Adult'}) · Prescribed on {rx.date || 'Today'}
                       </p>
                     </div>
                   </div>
@@ -1730,10 +1730,10 @@ function PrescriptionsPage({ notify = () => {} }: { notify?: (message: string) =
                     </div>
                     <div>
                       <h3 style={{ margin: '0 0 4px', fontSize: '1.25rem', color: '#0f172a' }}>
-                        {rx.doctorName.startsWith('Dr.') ? rx.doctorName : `Dr. ${rx.doctorName}`}
+                        {rx.doctorName ? (rx.doctorName.startsWith('Dr.') ? rx.doctorName : `Dr. ${rx.doctorName}`) : 'Dr. Consultant Physician'}
                       </h3>
                       <p style={{ margin: 0, fontSize: '13px', color: '#64748b' }}>
-                        {rx.doctorSpecialty || 'Consultant Physician'} · Patient: <strong>{rx.patientName}</strong>
+                        {rx.doctorSpecialty || 'Consultant Physician'} · Patient: <strong>{rx.patientName || 'Registered Patient'}</strong>
                         {rx.patientAge ? ` (${rx.patientAge} yrs, ${rx.patientGender || 'Adult'})` : ''}
                       </p>
                     </div>

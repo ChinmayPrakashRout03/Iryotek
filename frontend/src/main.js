@@ -231,7 +231,7 @@ export function initExperience(root, navigate = (path) => { window.location.href
     }))
     $$('dialog').forEach(dialog => { listen(dialog.querySelector('.dialog-close'), 'click', () => dialog.close()); listen(dialog, 'click', event => { if (event.target === dialog) { const rect = dialog.getBoundingClientRect(); if (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom) dialog.close() } }) })
     $$('[data-info]').forEach(button => listen(button, 'click', () => navigate(button.dataset.info === 'privacy' ? '/privacy' : '/contact')))
-    const destinations = { queue: ['Open appointment booking', '/appointments'], sakura: ['Talk with Sakura', '/triage'], pharmacy: ['Explore the pharmacy', '/pharmacy'], consult: ['View appointments & queue', '/appointments'], records: ['Open your health records', '/records'], directory: ['Search the full demo directory', '/directory'], admin: ['Open admin center', '/admin'] }
+    const destinations = { queue: ['Open appointment booking', '/appointments'], sakura: ['Talk with Iryo', '/triage'], pharmacy: ['Explore the pharmacy', '/pharmacy'], consult: ['View appointments & queue', '/appointments'], records: ['Open your health records', '/records'], directory: ['Search the full demo directory', '/directory'], admin: ['Open admin center', '/admin'] }
     Object.entries(destinations).forEach(([id, [label, path]]) => {
       const section = $(`#${id}`), link = document.createElement('a')
       link.className = 'text-link feature-route'; link.href = path; link.textContent = `${label} ↗`; section.append(link)

@@ -11,6 +11,8 @@ public class Prescription {
     private int doctorId;
     private String createdAt;
     private String remarks;
+    private String status = "APPROVED"; // DRAFT, APPROVED, DISPENSED, PARTIALLY_DISPENSED, CANCELLED
+    private String approvedAt;
     private List<PrescriptionMedicine> items = new ArrayList<>();
 
     public Prescription() {
@@ -25,6 +27,19 @@ public class Prescription {
         this.doctorId = doctorId;
         this.createdAt = createdAt;
         this.remarks = remarks;
+        this.status = "APPROVED";
+    }
+
+    public Prescription(int id, int appointmentId, int userId, int doctorId, String createdAt, String remarks, String status, String approvedAt) {
+        super();
+        this.id = id;
+        this.appointmentId = appointmentId;
+        this.userId = userId;
+        this.doctorId = doctorId;
+        this.createdAt = createdAt;
+        this.remarks = remarks;
+        this.status = status != null ? status : "APPROVED";
+        this.approvedAt = approvedAt;
     }
 
     public int getId() {
@@ -73,6 +88,22 @@ public class Prescription {
 
     public void setRemarks(String remarks) {
         this.remarks = remarks;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public String getApprovedAt() {
+        return approvedAt;
+    }
+
+    public void setApprovedAt(String approvedAt) {
+        this.approvedAt = approvedAt;
     }
 
     public List<PrescriptionMedicine> getItems() {

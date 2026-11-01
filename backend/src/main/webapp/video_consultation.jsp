@@ -689,7 +689,7 @@ video.local-video {
                 <!-- Sakura AI Differential Diagnoses Review Box -->
                 <div class="bg-dark bg-opacity-75 p-3 rounded-3 border border-cyan border-opacity-25 mb-3 fs-7">
                     <div class="d-flex justify-content-between align-items-center mb-2">
-                        <span class="fw-bold text-cyan"><i class="fa-solid fa-brain me-1"></i> Sakura AI Differential Triage</span>
+                        <span class="fw-bold text-cyan"><i class="fa-solid fa-brain me-1"></i> Iryo AI Differential Triage</span>
                         <span class="badge bg-info text-dark rounded-pill px-2 fs-8">AI Assisted</span>
                     </div>
 

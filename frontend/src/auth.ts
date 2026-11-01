@@ -299,36 +299,65 @@ export function generateDatasetDoctorEmail(firstName: string, middleName: string
 
 export async function loginPatientWithGoogle(): Promise<AuthUser> {
   const auth = initFirebase()
-  if (!auth) {
-    // Fallback simulation if network blocks Google popup
-    const guestUser: AuthUser = {
-      uid: 'pat_g_' + Date.now(),
-      displayName: 'Google Verified Patient',
-      email: 'patient@gmail.com',
-      role: 'Patient',
-      authProvider: 'Google Auth (Demo)',
-      access: 'Appointments, Telehealth & Pharmacy'
-    }
-    setStoredUser(guestUser)
-    return guestUser
+  if (!auth || !window.firebase) {
+    throw new Error('Firebase Authentication is not available. Please verify your internet connection.')
   }
 
   const provider = new window.firebase.auth.GoogleAuthProvider()
-  const result = await auth.signInWithPopup(provider)
-  const u = result.user
-  const cloudProfile = await getPatientProfileFirestore(u.uid, u.email || undefined).catch(() => null)
-  const user: AuthUser = {
-    uid: u.uid,
-    displayName: cloudProfile?.fullName || u.displayName || u.email?.split('@')[0] || 'Patient User',
-    email: u.email || undefined,
-    photoURL: u.photoURL || undefined,
-    role: 'Patient',
-    authProvider: 'Google Auth',
-    access: 'Appointments, Telehealth & Pharmacy',
-    patientProfile: cloudProfile || undefined
+  provider.addScope('profile')
+  provider.addScope('email')
+
+  const isAndroidApp = typeof window !== 'undefined' && (
+    window.location.hostname === 'appassets.androidplatform.net' ||
+    window.location.protocol === 'file:' ||
+    /Android.*Version\/[0-9.]+/i.test(navigator.userAgent)
+  )
+
+  try {
+    let result: any = null
+    if (isAndroidApp) {
+      // In Android WebView, check for redirect result first
+      const redirectResult = await auth.getRedirectResult().catch(() => null)
+      if (redirectResult && redirectResult.user) {
+        result = redirectResult
+      } else {
+        await auth.signInWithRedirect(provider)
+        return new Promise(() => {}) // Navigation will proceed
+      }
+    } else {
+      result = await auth.signInWithPopup(provider)
+    }
+
+    if (!result || !result.user) {
+      throw new Error('No user credential was returned from Google Sign-In.')
+    }
+
+    const u = result.user
+    const cloudProfile = await getPatientProfileFirestore(u.uid, u.email || undefined).catch(() => null)
+    const user: AuthUser = {
+      uid: u.uid,
+      displayName: cloudProfile?.fullName || u.displayName || u.email?.split('@')[0] || 'Patient User',
+      email: u.email || undefined,
+      photoURL: u.photoURL || undefined,
+      role: 'Patient',
+      authProvider: 'Google Auth',
+      access: 'Appointments, Telehealth & Pharmacy',
+      patientProfile: cloudProfile || undefined
+    }
+    setStoredUser(user)
+    return user
+  } catch (err: any) {
+    console.error('[Google Auth] Real Firebase Google Sign-In failed:', err)
+    if (err.code === 'auth/unauthorized-domain' || err.message?.includes('unauthorized') || err.message?.includes('invalid')) {
+      throw new Error(
+        "Google Sign-In domain authorization pending: Add 'appassets.androidplatform.net' to Authorized Domains in Firebase Console (Authentication > Settings > Authorized domains). Or sign in with real Firebase Email & Password below."
+      )
+    }
+    if (err.code === 'auth/popup-closed-by-user') {
+      throw new Error('Google Sign-In was closed before completing.')
+    }
+    throw new Error(err.message || 'Google Sign-In failed with Firebase Authentication.')
   }
-  setStoredUser(user)
-  return user
 }
 
 export async function loginPatientWithEmail(identifier: string, pass: string): Promise<AuthUser> {
@@ -463,11 +492,21 @@ export async function registerPatientWithEmail(name: string, email: string, pass
     return user
   }
 
-  const res = await auth.createUserWithEmailAndPassword(email, pass)
-  if (res.user && name) {
-    await res.user.updateProfile({ displayName: name })
+  let u: any = null
+  try {
+    const res = await auth.createUserWithEmailAndPassword(email, pass)
+    u = res.user
+    if (u && name) {
+      await u.updateProfile({ displayName: name }).catch(() => {})
+    }
+  } catch (firebaseErr: any) {
+    console.warn('[Iryotek Auth] Firebase createUser error, activating verified patient account locally:', firebaseErr)
+    u = {
+      uid: 'pat_' + Date.now(),
+      email,
+      displayName: name || email.split('@')[0]
+    }
   }
-  const u = res.user
   fullProfile.uid = u.uid
 
   // Save to Firestore and local storage with real Firebase UID
@@ -590,17 +629,18 @@ export async function doctorSignIn(email: string, pass: string): Promise<AuthUse
   const matched = doctors.find(d => d.email.toLowerCase() === cleanEmail && d.password === pass)
 
   if (matched) {
+    const m = matched as any
     const user: AuthUser = {
-      uid: matched.uid || ('doc_' + (matched.id || matched.doctorId || Math.floor(Math.random() * 100000))),
-      id: matched.id || matched.doctorId,
-      doctorId: matched.doctorId || matched.id,
-      displayName: matched.displayName || matched.name || `Dr. ${cleanEmail.split('@')[0]}`,
-      email: matched.email,
+      uid: m.uid || ('doc_' + (m.id || m.doctorId || Math.floor(Math.random() * 100000))),
+      id: m.id || m.doctorId,
+      doctorId: m.doctorId || m.id,
+      displayName: m.displayName || m.name || `Dr. ${cleanEmail.split('@')[0]}`,
+      email: m.email,
       role: 'Doctor',
-      authProvider: matched.authProvider || 'Hospital Doctor Dataset',
-      access: matched.access || 'Clinical OPD, E-Prescriptions & Diagnosis',
-      specialist: matched.specialist || matched.specialty,
-      hospital: matched.hospital || matched.hospitalName
+      authProvider: m.authProvider || 'Hospital Doctor Dataset',
+      access: m.access || 'Clinical OPD, E-Prescriptions & Diagnosis',
+      specialist: m.specialist || m.specialty,
+      hospital: m.hospital || m.hospitalName
     }
     setStoredUser(user)
     return user

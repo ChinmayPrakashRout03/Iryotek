@@ -27,7 +27,7 @@ public class DBConnection {
 				dbUser = "root";
 			}
 			if (dbPassword == null || dbPassword.trim().isEmpty()) {
-				dbPassword = "Chinmay980@";
+				dbPassword = "";
 			}
 
 			// step:2- create a connection

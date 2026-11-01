@@ -143,6 +143,11 @@ export interface TriageResult {
   recommendedSpecialty?: string
   severityLevel?: string
   clinicalDisclaimer?: string
+  analysis?: string
+  triageBadge?: string
+  triageLevel?: string
+  assistantName?: string
+  suggestedDoctors?: any[]
 }
 
 export interface AppointmentData {
@@ -896,10 +901,302 @@ export async function getMedicineCategories(): Promise<string[]> {
   return allMedicineCategories
 }
 
+const OPENROUTER_API_KEY = (import.meta.env.VITE_OPENROUTER_API_KEY as string) || ''
+const OPENROUTER_MODELS = [
+  'nvidia/nemotron-3.5-lightning:free',
+  'google/gemma-4-31b-it:free',
+  'liquid/lfm-2.5-2.6b:free',
+]
+
+const IRYO_SYSTEM_PROMPT = `You are Iryo, the dedicated AI Healthcare, Clinical, and Hospital Assistant at Iryotek Hospital.
+Your purpose is to provide safe, clear, empathetic healthcare triage, symptom guidance, and differential diagnosis preparation for patients and consulting doctors.
+
+PATIENT GREETINGS & RAPPORT PROTOCOL:
+When a patient greets you (e.g. "hi", "hello", "hey", "good morning", "how are you"):
+1. Greet them warmly and politely as Iryo at Iryotek Hospital.
+2. Ask how they are feeling and what symptoms or health questions they have.
+3. Append machine tags: [TRIAGE: MONITOR], [SPECIALTY: General Medicine], [DIFFERENTIAL_DIAGNOSES: []].
+
+CLINICAL TRIAGE PROTOCOL:
+1. Analyze patient-reported symptoms systematically and empathetically.
+2. Identify urgency levels (EMERGENCY, URGENT, ROUTINE, MONITOR).
+3. If life-threatening symptoms are described, instruct them to seek emergency care immediately.
+4. Provide practical home care and next steps.
+5. Always append the following machine tags at the VERY END on separate lines:
+[TRIAGE: EMERGENCY | URGENT | ROUTINE | MONITOR]
+[SPECIALTY: Cardiology | Orthopedics | Dermatology | Neurology | ENT | Ophthalmology | Gastroenterology | Pulmonology | Pediatrics | Urology | Oncology | General Medicine | Psychiatry | Gynecology]
+[DIFFERENTIAL_DIAGNOSES: [
+  {"condition": "Condition Name", "confidence": 80, "reasoning": "Clinical alignment", "recommendations": "Suggested action"}
+]]`
+
+let iryoClientChatHistory: Array<{ role: string; content: string }> = []
+
+async function callOpenRouterDirect(messages: Array<{ role: string; content: string }>): Promise<string> {
+  let lastError: any = null
+  for (const model of OPENROUTER_MODELS) {
+    try {
+      const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+          'HTTP-Referer': 'https://iryotek.hospital',
+          'X-Title': 'Iryotek Hospital AI Companion',
+        },
+        body: JSON.stringify({
+          model,
+          messages,
+          temperature: 0.7,
+          top_p: 0.95,
+          max_tokens: 4096,
+        }),
+      })
+
+      if (!response.ok) {
+        const errText = await response.text().catch(() => '')
+        console.warn(`[Iryo AI] Model ${model} returned HTTP ${response.status}:`, errText)
+        lastError = new Error(`HTTP ${response.status}: ${errText}`)
+        continue
+      }
+
+      const data = await response.json()
+      const message = data.choices?.[0]?.message
+      const content = message?.content || message?.reasoning || message?.reasoning_content
+      if (content && typeof content === 'string' && content.trim().length > 0) {
+        return content.trim()
+      }
+    } catch (e) {
+      console.warn(`[Iryo AI] Error calling model ${model}:`, e)
+      lastError = e
+    }
+  }
+  throw lastError || new Error('All OpenRouter models failed')
+}
+
+function tryParseDifferentialJson(rawJsonStr: string): any[] {
+  try {
+    return JSON.parse(rawJsonStr)
+  } catch {
+    const lastBrace = rawJsonStr.lastIndexOf('}')
+    if (lastBrace !== -1) {
+      try {
+        const repaired = rawJsonStr.substring(0, lastBrace + 1) + ']'
+        return JSON.parse(repaired)
+      } catch {}
+    }
+    return []
+  }
+}
+
+function parseIryoAITags(rawText: string): {
+  cleanText: string
+  triageLevel: string
+  specialty: string
+  differentialDiagnoses: Array<{ condition: string; probability: string; reasoning: string }>
+} {
+  let cleanText = rawText
+  let triageLevel = 'ROUTINE'
+  let specialty = 'General Medicine'
+  let differentialDiagnoses: Array<{ condition: string; probability: string; reasoning: string }> = []
+
+  // 1. Extract [DIFFERENTIAL_DIAGNOSES: [...]] or unclosed [DIFFERENTIAL_DIAGNOSES: [...]
+  const diffMatch = cleanText.match(/\[DIFFERENTIAL_DIAGNOSES:\s*(\[[\s\S]*?)(?:\]\s*\]|\]|$)/i)
+  if (diffMatch && diffMatch[1]) {
+    const parsed = tryParseDifferentialJson(diffMatch[1].endsWith(']') ? diffMatch[1] : diffMatch[1] + ']')
+    if (Array.isArray(parsed) && parsed.length > 0) {
+      differentialDiagnoses = parsed.map((item: any) => ({
+        condition: item.condition || item.name || 'Clinical Observation',
+        probability: item.confidence ? `${item.confidence}% Confidence` : (item.probability || 'Clinical Review'),
+        reasoning: item.reasoning || item.recommendations || item.description || 'Evaluated via Iryo clinical protocols.',
+      }))
+    }
+    cleanText = cleanText.replace(/\[DIFFERENTIAL_DIAGNOSES:[\s\S]*?(?:\]\s*\]|\]|$)/gi, '')
+  }
+
+  // 2. Extract [TRIAGE: ...]
+  const triageMatch = cleanText.match(/\[TRIAGE:\s*(EMERGENCY|URGENT|ROUTINE|MONITOR)\]/i)
+  if (triageMatch && triageMatch[1]) {
+    triageLevel = triageMatch[1].toUpperCase()
+    cleanText = cleanText.replace(/\[TRIAGE:\s*(?:EMERGENCY|URGENT|ROUTINE|MONITOR)\]/gi, '')
+  }
+
+  // 3. Extract [SPECIALTY: ...]
+  const specMatch = cleanText.match(/\[SPECIALTY:\s*([^\]]+)\]/i)
+  if (specMatch && specMatch[1]) {
+    specialty = specMatch[1].trim()
+    cleanText = cleanText.replace(/\[SPECIALTY:\s*[^\]]+\]/gi, '')
+  }
+
+  cleanText = cleanText.trim()
+  return { cleanText, triageLevel, specialty, differentialDiagnoses }
+}
+
 /**
- * Check symptoms via Gemini AI Triage + Emergency Detector
+ * Check symptoms via Iryo AI (OpenRouter NVIDIA Nemotron 3.5 Engine) + Multi-Tier Fallback
  */
 export async function checkSymptomsAI(symptoms: string): Promise<TriageResult> {
+  const trimmed = symptoms.trim()
+
+  // 1. Session reset command
+  if (trimmed.toLowerCase() === '__reset__' || trimmed.toLowerCase() === 'reset chat') {
+    iryoClientChatHistory = []
+    try {
+      await fetch('/Iryotek/aiSymptomCheck', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' },
+        body: new URLSearchParams({ message: '__reset__' }).toString(),
+      }).catch(() => {})
+    } catch {}
+    return {
+      status: 'success',
+      isEmergency: false,
+      differentialDiagnoses: [],
+      recommendedSpecialist: 'General physician',
+      recommendedSpecialty: 'General Medicine',
+      severityLevel: 'MONITOR',
+      clinicalDisclaimer: 'Iryo AI is an assistive differential companion at Iryotek Hospital.',
+      analysis: 'Chat session refreshed. How can I assist you with your health today? 🌿',
+      triageBadge: '🟢 Welcoming Patient',
+      triageLevel: 'MONITOR',
+      assistantName: 'Iryo',
+      suggestedDoctors: [],
+    }
+  }
+
+  // 2. Fast-path greeting
+  const isGreetingMsg = /^(hi|hello|hey|heyy|heya|hola|namaste|vanakkam|good morning|good afternoon|good evening|good day|howdy|sup|hi there|hello there|hi doctor|hello doctor|hi iryo|hello iryo|hey iryo|how are you|how are you doing|who are you|greetings|start|can you help me)[!.,? ]*$/i.test(trimmed)
+  if (isGreetingMsg) {
+    const greetingReply = "Hello! Welcome to Iryotek Hospital. I'm Iryo, your AI clinical health companion. 🌿\n\nHow are you feeling today? Please feel free to describe any symptoms, health concerns, or medical questions you have. I'm here to listen, answer your questions, and guide you to the right care."
+    iryoClientChatHistory.push({ role: 'user', content: trimmed })
+    iryoClientChatHistory.push({ role: 'assistant', content: greetingReply })
+    return {
+      status: 'success',
+      isEmergency: false,
+      differentialDiagnoses: [],
+      recommendedSpecialist: 'General physician',
+      recommendedSpecialty: 'General Medicine',
+      severityLevel: 'MONITOR',
+      clinicalDisclaimer: 'Iryo AI is an assistive differential companion at Iryotek Hospital.',
+      analysis: greetingReply,
+      triageBadge: '🟢 Welcoming Patient',
+      triageLevel: 'MONITOR',
+      assistantName: 'Iryo',
+      suggestedDoctors: [],
+    }
+  }
+
+  // 3. Primary Engine: Direct OpenRouter call (Works identically in Web & Android APK)
+  try {
+    iryoClientChatHistory.push({ role: 'user', content: trimmed })
+    if (iryoClientChatHistory.length > 12) {
+      iryoClientChatHistory = iryoClientChatHistory.slice(iryoClientChatHistory.length - 12)
+    }
+
+    const messagesToSend = [
+      { role: 'system', content: IRYO_SYSTEM_PROMPT },
+      ...iryoClientChatHistory,
+    ]
+
+    const rawResponse = await callOpenRouterDirect(messagesToSend)
+    const { cleanText, triageLevel, specialty, differentialDiagnoses } = parseIryoAITags(rawResponse)
+
+    // Save assistant reply in conversation memory
+    iryoClientChatHistory.push({ role: 'assistant', content: cleanText })
+
+    const isEmergency = triageLevel === 'EMERGENCY' || /chest pain|shortness of breath|can't breathe|cannot breathe|unconscious|severe bleeding|stroke|crushing pressure/i.test(trimmed)
+    const triageBadge = isEmergency
+      ? '🔴 Emergency'
+      : triageLevel === 'URGENT'
+        ? '🟠 Urgent Consultation'
+        : triageLevel === 'ROUTINE'
+          ? '🟡 Routine Consultation'
+          : '🟢 Self-Care / Monitoring'
+
+    // Match doctors from hospital cache
+    let suggestedDoctors: any[] = []
+    try {
+      const allDocs = await loadAllDoctors()
+      const sLower = specialty.toLowerCase()
+      suggestedDoctors = allDocs.filter(d => 
+        (d.specialty && d.specialty.toLowerCase().includes(sLower)) ||
+        (d.specialist && d.specialist.toLowerCase().includes(sLower)) ||
+        sLower.includes((d.specialty || '').toLowerCase())
+      ).slice(0, 3)
+      if (suggestedDoctors.length === 0 && allDocs.length > 0) {
+        suggestedDoctors = allDocs.slice(0, 2)
+      }
+    } catch {}
+
+    return {
+      status: 'success',
+      isEmergency,
+      emergencyReason: isEmergency ? 'Urgent cardiovascular or respiratory indicator identified in symptom profile.' : undefined,
+      immediateActionPlan: isEmergency
+        ? ['Seek immediate emergency care (Ground Floor, Room 101)', 'Call hospital emergency desk: +202-555-0191 or 112', 'Rest comfortably and do not drive yourself']
+        : ['Review Iryo AI consultation guidance', 'Stay hydrated and rest in a well-ventilated space', 'Schedule clinical OPD consultation if symptoms worsen'],
+      differentialDiagnoses: differentialDiagnoses.length > 0 ? differentialDiagnoses : (
+        isEmergency
+          ? [{ condition: 'Acute Coronary Syndrome', probability: 'High urgency', reasoning: 'Emergency rule-out required.' }]
+          : [{ condition: 'Clinical Evaluation Needed', probability: 'Review', reasoning: 'Consult specialist for confirmed examination.' }]
+      ),
+      recommendedSpecialist: specialty,
+      recommendedSpecialty: specialty,
+      severityLevel: triageLevel,
+      clinicalDisclaimer: 'Iryo AI guidance is an assistive differential tool, not a definitive medical diagnosis. Consult a qualified physician for evaluation.',
+      analysis: cleanText,
+      triageBadge,
+      triageLevel,
+      assistantName: 'Iryo',
+      suggestedDoctors,
+    }
+  } catch (openRouterErr) {
+    console.warn('[Iryo AI] OpenRouter direct call failed, trying backend servlet fallback:', openRouterErr)
+  }
+
+  // 4. Secondary fallback: backend servlet /Iryotek/aiSymptomCheck (if Tomcat running)
+  try {
+    const directRes = await fetch('/Iryotek/aiSymptomCheck', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+        'Accept': 'application/json',
+      },
+      body: new URLSearchParams({ message: symptoms }).toString(),
+    })
+    if (directRes.ok) {
+      const data = await directRes.json()
+      if (data && (data.analysis || data.triageLevel || data.specialty)) {
+        return {
+          status: 'success',
+          isEmergency: Boolean(data.isEmergency),
+          emergencyReason: data.emergencyHelpline ? `Iryotek Emergency Desk Helpline: ${data.emergencyHelpline}` : undefined,
+          immediateActionPlan: data.isEmergency
+            ? ['Seek immediate emergency care (Ground Floor, Room 101)', 'Call hospital emergency desk: +202-555-0191 or 112', 'Rest comfortably and do not drive yourself']
+            : ['Review Iryo AI consultation guidance', 'Stay hydrated and rest in a well-ventilated space', 'Schedule clinical OPD consultation if symptoms worsen'],
+          differentialDiagnoses: Array.isArray(data.differentialDiagnoses) && data.differentialDiagnoses.length > 0
+            ? data.differentialDiagnoses.map((d: any) => ({
+                condition: d.condition || 'Clinical Observation',
+                probability: d.confidence ? `${d.confidence}% Confidence` : (d.probability || 'Clinical Review'),
+                reasoning: d.reasoning || d.recommendations || 'Evaluated via Iryo clinical knowledge base.',
+              }))
+            : [],
+          recommendedSpecialist: data.specialty || 'General physician',
+          recommendedSpecialty: data.specialty || 'General physician',
+          severityLevel: data.triageLevel || 'ROUTINE',
+          clinicalDisclaimer: data.disclaimer || 'Iryo AI is an assistive differential tool. It does not replace clinical diagnosis. Consult a qualified physician for evaluation.',
+          analysis: data.analysis,
+          triageBadge: data.triageBadge,
+          triageLevel: data.triageLevel,
+          assistantName: data.assistantName || 'Iryo',
+          suggestedDoctors: Array.isArray(data.suggestedDoctors) ? data.suggestedDoctors : [],
+        }
+      }
+    }
+  } catch (err) {
+    console.warn('[Iryo AI] Direct Iryo AI servlet call failed, trying /api/triage fallback:', err)
+  }
+
+  // 5. Tertiary attempt: /api/triage endpoint
   try {
     const res = await request<TriageResult>('/triage', {
       method: 'POST',
@@ -911,6 +1208,8 @@ export async function checkSymptomsAI(symptoms: string): Promise<TriageResult> {
   } catch {
     // Local intelligent emergency heuristic fallback
   }
+
+  // 6. Quaternary fallback: intelligent offline heuristic emergency triage engine
   const isEmergency = /chest pain|shortness of breath|can't breathe|cannot breathe|unconscious|severe bleeding|stroke|crushing pressure/i.test(symptoms)
   const isSkin = /skin|rash|itch|redness|hives/i.test(symptoms)
   const isSinus = /sinus|headache|nose|congestion|fever/i.test(symptoms)
@@ -955,7 +1254,13 @@ export async function checkSymptomsAI(symptoms: string): Promise<TriageResult> {
     recommendedSpecialist: specialty,
     recommendedSpecialty: specialty,
     severityLevel: isEmergency ? 'CRITICAL' : 'MILD_TO_MODERATE',
-    clinicalDisclaimer: 'Sakura AI guidance is an assistive differential tool, not a definitive medical diagnosis. Consult a qualified physician for evaluation.',
+    clinicalDisclaimer: 'Iryo AI guidance is an assistive differential tool, not a definitive medical diagnosis. Consult a qualified physician for evaluation.',
+    analysis: isEmergency
+      ? "🚨 URGENT: The symptoms you described indicate a potential acute clinical emergency. Please do not wait. Visit the nearest emergency room or call emergency services immediately."
+      : `I have received your symptoms and performed a preliminary clinical differential evaluation. Based on what you shared, consulting a ${specialty} is advised. Please keep track of when these symptoms began, drink plenty of water, and consult a doctor if discomfort persists.`,
+    triageBadge: isEmergency ? '🔴 Emergency Consultation' : '🟡 Routine Consultation',
+    triageLevel: isEmergency ? 'EMERGENCY' : 'ROUTINE',
+    assistantName: 'Iryo',
   }
 }
 
@@ -978,6 +1283,7 @@ export interface ApiAppointment {
   symptoms?: string
   doctorId?: number
   doctor?: string
+  doctorName?: string
   specialty?: string
   status?: string
   type?: string
@@ -1086,7 +1392,14 @@ export function getSharedPrescriptions(): SharedPrescription[] {
       const parsed = JSON.parse(raw)
       if (Array.isArray(parsed)) {
         // Exclude mock and test prescriptions so client tests only clean, authentic prescriptions
-        return parsed.filter(rx => rx && !MOCK_RX_IDS.includes(rx.id) && rx.patientName !== 'Planio' && rx.patientName !== 'Registered Patient')
+        return parsed
+          .filter(rx => rx && !MOCK_RX_IDS.includes(rx.id) && rx.patientName !== 'Planio' && rx.patientName !== 'Registered Patient')
+          .map(rx => ({
+            ...rx,
+            doctorName: rx.doctorName || (rx.doctor ? rx.doctor : 'Dr. Consultant Physician'),
+            patientName: rx.patientName || 'Registered Patient',
+            medicines: Array.isArray(rx.medicines) ? rx.medicines : []
+          }))
       }
     }
   } catch {}

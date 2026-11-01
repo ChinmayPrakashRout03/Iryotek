@@ -100,41 +100,81 @@
 					</div>
 
 					<!-- Itemized Prescribed Medicines -->
-					<h6 class="fw-bold text-dark text-uppercase fs-8 tracking-wider mb-3">Prescribed Medications</h6>
+					<h6 class="fw-bold text-dark text-uppercase fs-8 tracking-wider mb-3">Prescribed Medications & Dispensing Regimen</h6>
 					<div class="table-responsive mb-4">
-						<table class="table align-middle border rounded-4 overflow-hidden">
+						<table class="table align-middle border rounded-4 overflow-hidden shadow-xs">
 							<thead class="bg-light">
 								<tr class="fs-8 text-uppercase text-muted">
-									<th class="py-3 px-4">Medicine Name</th>
-									<th class="py-3">Dosage / Instructions</th>
-									<th class="py-3 text-center">Prescribed Qty</th>
-									<th class="py-3 text-center">Stock Availability</th>
+									<th class="py-3 px-4">Medicine & Strength</th>
+									<th class="py-3">Prescribed Regimen</th>
+									<th class="py-3 text-center">Calculated Quantity</th>
+									<th class="py-3 text-center">Pharmacy Status</th>
 								</tr>
 							</thead>
 							<tbody>
 								<% if (rx.getItems() != null && !rx.getItems().isEmpty()) { %>
-									<% for (PrescriptionMedicine item : rx.getItems()) { %>
+									<% for (PrescriptionMedicine item : rx.getItems()) { 
+										String mName = item.getMedicineName() != null && !item.getMedicineName().isEmpty() 
+											? item.getMedicineName() 
+											: (item.getMedicine() != null ? item.getMedicine().getName() : "Medicine #" + item.getMedicineId());
+										String mForm = item.getDosageForm() != null && !item.getDosageForm().isEmpty() 
+											? item.getDosageForm() 
+											: (item.getMedicine() != null ? item.getMedicine().getDosageForm() : "Tablet");
+										int dispQty = item.getCalculatedQuantity() > 0 ? item.getCalculatedQuantity() : item.getQuantity();
+									%>
 										<tr>
 											<td class="py-3 px-4">
-												<div class="fw-bold text-dark"><%= item.getMedicine() != null ? item.getMedicine().getName() : "Medicine #" + item.getMedicineId() %></div>
-												<div class="fs-8 text-muted"><%= item.getMedicine() != null ? item.getMedicine().getCategory() : "" %></div>
+												<div class="fw-bold text-dark"><%= mName %></div>
+												<div class="d-flex align-items-center gap-1 mt-1">
+													<span class="badge bg-secondary-subtle text-secondary border fs-8"><%= mForm %></span>
+													<% if (item.getStrength() != null && !item.getStrength().isEmpty()) { %>
+														<span class="badge bg-info-subtle text-info border fs-8"><%= item.getStrength() %></span>
+													<% } %>
+												</div>
 											</td>
 											<td>
-												<span class="badge bg-secondary-subtle text-dark px-3 py-2 rounded-pill fs-7">
-													<i class="fa-solid fa-clock me-1"></i> <%= item.getDosageInstructions() %>
-												</span>
-											</td>
-											<td class="text-center fw-bold font-monospace fs-6">
-												<%= item.getQuantity() %>
+												<div class="fw-semibold text-dark fs-7">
+													<%= item.getDosageInstructions() != null ? item.getDosageInstructions() : "As directed" %>
+												</div>
+												<div class="fs-8 text-muted mt-1">
+													<% if (item.getUnitsPerDose() > 0) { %>
+														<span class="fw-semibold text-secondary">Dose: <%= item.getUnitsPerDose() %> <%= mForm.toLowerCase() %></span> &bull;
+													<% } %>
+													<%= item.getFrequency() != null ? item.getFrequency() : "Regular schedule" %> &bull;
+													<%= item.getDurationDays() > 0 ? item.getDurationDays() + " days" : "Course" %>
+												</div>
+												<% if (item.getSpecialInstructions() != null && !item.getSpecialInstructions().isEmpty()) { %>
+													<div class="fs-8 text-secondary fst-italic mt-1">
+														<i class="fa-regular fa-comment-dots me-1"></i> <%= item.getSpecialInstructions() %>
+													</div>
+												<% } %>
 											</td>
 											<td class="text-center">
-												<% if (item.getMedicine() != null && item.getMedicine().getStock() > 0) { %>
-													<span class="badge bg-success-subtle text-success px-3 py-2 rounded-pill fs-7">
-														<i class="fa-solid fa-check me-1"></i> Available & Auto-Added
+												<span class="badge bg-primary text-white font-monospace fs-6 px-3 py-2 rounded-pill shadow-xs">
+													<%= dispQty %>
+												</span>
+												<% if (item.getCalculationBreakdown() != null && !item.getCalculationBreakdown().isEmpty()) { %>
+													<div class="fs-8 text-muted mt-1 font-monospace">
+														<%= item.getCalculationBreakdown() %>
+													</div>
+												<% } %>
+											</td>
+											<td class="text-center">
+												<% if ("DISPENSED".equalsIgnoreCase(item.getStatus())) { %>
+													<span class="badge bg-success text-white px-3 py-2 rounded-pill fs-7">
+														<i class="fa-solid fa-circle-check me-1"></i> Dispensed by Pharmacy
+													</span>
+												<% } else if (item.getMedicine() != null && item.getMedicine().getStock() >= dispQty) { %>
+													<span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2 rounded-pill fs-7">
+														<i class="fa-solid fa-check me-1"></i> In Stock & Ready
+													</span>
+												<% } else if (item.getMedicine() != null && item.getMedicine().getStock() > 0) { %>
+													<span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-3 py-2 rounded-pill fs-7">
+														<i class="fa-solid fa-triangle-exclamation me-1"></i> Partial Stock (<%= item.getMedicine().getStock() %> avl)
 													</span>
 												<% } else { %>
-													<span class="badge bg-danger-subtle text-danger px-3 py-2 rounded-pill fs-7">
-														<i class="fa-solid fa-triangle-exclamation me-1"></i> Out of Stock
+													<span class="badge bg-danger-subtle text-danger border border-danger-subtle px-3 py-2 rounded-pill fs-7">
+														<i class="fa-solid fa-clock-rotate-left me-1"></i> Shortage Review
 													</span>
 												<% } %>
 											</td>
@@ -184,10 +224,13 @@ var currentRxMeds = [
 <% if (rx != null && rx.getItems() != null) {
      for (int i = 0; i < rx.getItems().size(); i++) {
        PrescriptionMedicine item = rx.getItems().get(i);
-       String mName = item.getMedicine() != null ? item.getMedicine().getName() : "Medicine";
+       String mName = item.getMedicineName() != null && !item.getMedicineName().isEmpty()
+           ? item.getMedicineName()
+           : (item.getMedicine() != null ? item.getMedicine().getName() : "Medicine");
        String mDose = item.getDosageInstructions() != null ? item.getDosageInstructions() : "As directed";
+       int finalQty = item.getCalculatedQuantity() > 0 ? item.getCalculatedQuantity() : item.getQuantity();
 %>
-  { name: '<%= mName.replace("'", "\\'") %>', dosage: '<%= mDose.replace("'", "\\'") %>', instructions: 'Qty: <%= item.getQuantity() %>' }<%= i < rx.getItems().size() - 1 ? "," : "" %>
+  { name: '<%= mName.replace("'", "\\'") %>', dosage: '<%= mDose.replace("'", "\\'") %>', instructions: 'Qty: <%= finalQty %>' }<%= i < rx.getItems().size() - 1 ? "," : "" %>
 <%   }
    }
 %>

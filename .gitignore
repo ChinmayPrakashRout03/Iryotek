@@ -23,6 +23,10 @@ target/
 .env.production
 .env.development
 
+# Android APK builds (large binaries released via GitHub Releases)
+*.apk
+*.aab
+
 # Large files (>100MB blocked by GitHub)
 # (Raw medicines.csv is 229MB; medicines.csv.gz is 16MB and uploaded)
 database/dataset/medicines.csv

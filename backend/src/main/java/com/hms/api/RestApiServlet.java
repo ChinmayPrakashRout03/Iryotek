@@ -943,7 +943,7 @@ public class RestApiServlet extends HttpServlet {
         reply.addProperty("triageBadge", triageBadge);
         reply.addProperty("recommendedSpecialty", recommendedSpecialty);
         reply.add("differentialDiagnoses", differentials);
-        reply.addProperty("disclaimer", "FOR CLINICAL PREPARATION ONLY: This Sakura AI evaluation is provided to prepare you and your consulting physician. It does NOT constitute a confirmed medical diagnosis.");
+        reply.addProperty("disclaimer", "FOR CLINICAL PREPARATION ONLY: This Iryo AI evaluation is provided to prepare you and your consulting physician. It does NOT constitute a confirmed medical diagnosis.");
         reply.addProperty("analysis", isEmergency ? emergencyResult.getGuidance() : "Based on your clinical symptoms, an evaluation with a " + recommendedSpecialty + " is recommended.");
 
         sendJson(resp, reply);

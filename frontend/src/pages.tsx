@@ -200,7 +200,7 @@ export function PageHeading({ label, title, description, action }: { label: stri
 const patientNav = [
   { path: 'patient', icon: '◌', label: 'My overview' },
   { path: 'appointments', icon: '◷', label: 'Appointments' },
-  { path: 'triage', icon: '✳', label: 'Sakura AI' },
+  { path: 'triage', icon: '✳', label: 'Iryo AI' },
   { path: 'pharmacy', icon: '✚', label: 'Pharmacy' },
   { path: 'records', icon: '▤', label: 'Health records' },
   { path: 'directory', icon: '⌕', label: 'Find a doctor' },
@@ -235,17 +235,24 @@ export function CarePage() {
   const { pathname } = useLocation(), page = pathname.split('/')[1]
   const [notice, setNotice] = useState(''), [menuOpen, setMenuOpen] = useState(false)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
-    try {
-      return localStorage.getItem('iryotek_sidebar_collapsed') === 'true'
-    } catch {
-      return false
+    if (typeof window !== 'undefined' && (window.innerWidth <= 1024 || /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent))) {
+      return true
     }
+    try {
+      const stored = localStorage.getItem('iryotek_sidebar_collapsed')
+      if (stored !== null) return stored === 'true'
+    } catch {}
+    return false
   })
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(() => getStoredUser())
   const noticeTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const notify = (text: string) => { setNotice(text); if (noticeTimer.current) clearTimeout(noticeTimer.current); noticeTimer.current = setTimeout(() => setNotice(''), 5000) }
   
   const toggleSidebar = () => {
+    if (typeof window !== 'undefined' && window.innerWidth <= 1024) {
+      setMenuOpen(prev => !prev)
+      return
+    }
     setSidebarCollapsed(prev => {
       const next = !prev
       try { localStorage.setItem('iryotek_sidebar_collapsed', String(next)) } catch {}
@@ -290,7 +297,7 @@ export function CarePage() {
           {sidebarCollapsed ? <SidebarExpand /> : <SidebarCollapse />}
         </button>
       </div>
-      <nav aria-label="Care navigation">{visibleNav.map(item => <Link key={item.path} to={`/${item.path}`} className={(page === item.path || (isDoctor && item.path === 'doctor' && page === 'patient')) ? 'selected' : ''} aria-current={page === item.path ? 'page' : undefined} title={sidebarCollapsed ? item.label : undefined}><span>{item.icon}</span><span className="nav-label">{item.label}</span>{item.path === 'triage' && <i className="tiny-dot" />}</Link>)}</nav>
+      <nav aria-label="Care navigation">{visibleNav.map(item => <Link key={item.path} to={`/${item.path}`} onClick={() => setMenuOpen(false)} className={(page === item.path || (isDoctor && item.path === 'doctor' && page === 'patient')) ? 'selected' : ''} aria-current={page === item.path ? 'page' : undefined} title={sidebarCollapsed ? item.label : undefined}><span>{item.icon}</span><span className="nav-label">{item.label}</span>{item.path === 'triage' && <i className="tiny-dot" />}</Link>)}</nav>
     </aside>
     <div className={`demo-main ${sidebarCollapsed ? 'expanded' : ''}`}>
       <header className="demo-topbar">
@@ -384,7 +391,7 @@ function PatientPage() {
           <span className="eyebrow">YOUR NEXT CHAPTER</span>
           <h2>More living.<br /><em>Less waiting.</em></h2>
           <p>From your first question to your everyday wellbeing. We're here for every step.</p>
-          <Link className="button light" to="/triage">Start with Sakura <span>↗</span></Link>
+          <Link className="button light" to="/triage">Start with Iryo <span>↗</span></Link>
           <span className="welcome-kanji">CARE</span>
         </section>
         <Panel title="Your next appointment" subtitle="RESERVATIONS">
@@ -422,8 +429,8 @@ function PatientPage() {
         <Metric label="UPCOMING VISITS" value={String(state.appointments.filter(item => item.status !== 'Cancelled').length).padStart(2, '0')} note="Your time, respected" />
       </div>
       <div className="demo-split">
-        <Panel title="A little clarity, whenever you need it." subtitle="SAKURA AI">
-          <p className="demo-muted">Not sure where to begin? Talk through a concern with Sakura and find the right next step.</p>
+        <Panel title="A little clarity, whenever you need it." subtitle="IRYO AI">
+          <p className="demo-muted">Not sure where to begin? Talk through a concern with Iryo and find the right next step.</p>
           <div className="quick-concerns">
             <Link to="/triage?scenario=sinus">Headache & sinus pressure ↗</Link>
             <Link to="/triage?scenario=skin">A skin concern ↗</Link>
@@ -2075,103 +2082,376 @@ function AppointmentsPage({ notify }: { notify: (text: string) => void }) {
   )
 }
 
+interface TriageChatMessage {
+  id: string
+  sender: 'iryo' | 'user'
+  text: string
+  timestamp: string
+  triageData?: TriageResult
+}
+
+function renderInlineFormatting(str: string) {
+  const parts = str.split(/(\*\*[^*]+\*\*)/g)
+  return parts.map((part, idx) => {
+    if (part.startsWith('**') && part.endsWith('**')) {
+      return <strong key={idx} style={{ color: 'var(--ink)' }}>{part.slice(2, -2)}</strong>
+    }
+    return part
+  })
+}
+
+function FormattedIryoMessage({ text }: { text: string }) {
+  const paragraphs = text.split(/\n\s*\n/).filter(Boolean)
+  if (paragraphs.length === 0) {
+    return <p style={{ margin: 0, lineHeight: 1.65 }}>{renderInlineFormatting(text)}</p>
+  }
+
+  return (
+    <div className="iryo-msg-body" style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
+      {paragraphs.map((para, pIdx) => {
+        const lines = para.split('\n').filter(Boolean)
+        const isList = lines.length > 1 && lines.every(l => /^\s*[-*•\d+.]\s+/.test(l))
+        if (isList) {
+          return (
+            <ul key={pIdx} style={{ margin: '0.2rem 0 0.2rem 1.2rem', padding: 0 }}>
+              {lines.map((item, lIdx) => {
+                const cleaned = item.replace(/^\s*[-*•\d+.]\s+/, '')
+                return <li key={lIdx} style={{ marginBottom: '0.25rem' }}>{renderInlineFormatting(cleaned)}</li>
+              })}
+            </ul>
+          )
+        }
+        return (
+          <p key={pIdx} style={{ margin: 0, lineHeight: 1.65 }}>
+            {lines.map((l, lIdx) => (
+              <span key={lIdx} style={{ display: 'block', marginBottom: lIdx < lines.length - 1 ? '0.35rem' : 0 }}>
+                {renderInlineFormatting(l)}
+              </span>
+            ))}
+          </p>
+        )
+      })}
+    </div>
+  )
+}
+
 function TriagePage() {
-  const [params] = useSearchParams(), [input, setInput] = useState(''), [submitted, setSubmitted] = useState('')
+  const [params] = useSearchParams()
+  const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
-  const [triageData, setTriageData] = useState<TriageResult | null>(null)
-  const presets: Record<string, string> = { sinus: 'Headache and sinus pressure for two days', skin: 'An itchy rash on my arm', general: 'I feel tired and would like a general checkup' }
-  
+  const [latestTriage, setLatestTriage] = useState<TriageResult | null>(null)
+  const messagesEndRef = useRef<HTMLDivElement>(null)
+
+  const presets: Record<string, string> = {
+    sinus: 'Headache and sinus pressure for two days',
+    skin: 'An itchy rash on my arm',
+    general: 'I feel tired and would like a general checkup'
+  }
+
+  const user = getStoredUser()
+  const greetingName = user?.displayName ? user.displayName.split(' ')[0] : 'there'
+
+  const [messages, setMessages] = useState<TriageChatMessage[]>([
+    {
+      id: 'init-greeting',
+      sender: 'iryo',
+      text: `Hello, ${greetingName}. I'm Iryo, your AI clinical companion at Iryotek Hospital.\n\nTell me what you're experiencing—such as what symptoms you have, when they started, and how severe they feel. I will listen carefully, ask clinical follow-up questions, cross-reference diagnostic criteria, and recommend the right care pathway for you.`,
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    }
+  ])
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [messages, loading])
+
   const runTriage = async (text: string) => {
-    setSubmitted(text)
+    if (!text.trim() || loading) return
+    const userMsg: TriageChatMessage = {
+      id: 'user-' + Date.now(),
+      sender: 'user',
+      text: text.trim(),
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    }
+    setMessages(prev => [...prev, userMsg])
     setLoading(true)
+
     try {
-      const result = await checkSymptomsAI(text)
-      setTriageData(result)
+      const result = await checkSymptomsAI(text.trim())
+      setLatestTriage(result)
+      const aiReply = result.analysis || (
+        result.isEmergency
+          ? '🚨 URGENT: The symptoms you described indicate a potential acute clinical emergency. Please do not wait. Visit the nearest emergency room or call emergency services immediately.'
+          : `I have received your symptoms and evaluated them against clinical protocols. Consulting a ${result.recommendedSpecialty || result.recommendedSpecialist || 'General physician'} is recommended.`
+      )
+      const aiMsg: TriageChatMessage = {
+        id: 'ai-' + Date.now(),
+        sender: 'iryo',
+        text: aiReply,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        triageData: result,
+      }
+      setMessages(prev => [...prev, aiMsg])
+    } catch (err) {
+      const errorMsg: TriageChatMessage = {
+        id: 'ai-err-' + Date.now(),
+        sender: 'iryo',
+        text: "I couldn't complete the clinical analysis due to a network interruption. If you are experiencing acute distress, please call emergency services immediately.",
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      }
+      setMessages(prev => [...prev, errorMsg])
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleReset = async () => {
+    setLoading(true)
+    try {
+      await checkSymptomsAI('__reset__')
+    } catch {
+      // ignore
+    } finally {
+      setLoading(false)
+      setLatestTriage(null)
+      setMessages([
+        {
+          id: 'reset-' + Date.now(),
+          sender: 'iryo',
+          text: `Chat session refreshed. How can I assist you with your health today, ${greetingName}? 🌿`,
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        }
+      ])
     }
   }
 
   useEffect(() => { 
     if (params.get('scenario')) {
       const text = presets[params.get('scenario')!] || ''
-      setInput(text)
       if (text) runTriage(text)
     }
   }, [])
 
-  const emergency = triageData?.isEmergency || /chest pain|shortness of breath|can't breathe|cannot breathe|unconscious|severe bleeding|stroke/i.test(submitted)
-  const specialty = triageData?.recommendedSpecialty || triageData?.recommendedSpecialist || 'General physician'
+  const emergency = latestTriage?.isEmergency
+  const specialty = latestTriage?.recommendedSpecialty || latestTriage?.recommendedSpecialist || 'General physician'
   const specialist = doctors.find(item => item.specialty.toLowerCase().includes(specialty.toLowerCase()) || specialty.toLowerCase().includes(item.specialty.toLowerCase())) || doctors[0]
-  const user = getStoredUser()
-  const greetingName = user?.displayName ? user.displayName.split(' ')[0] : 'there'
 
-  return <><PageHeading label="SAKURA / AI CLINICAL COMPANION" title="Let's find your next step." description="Differential triage powered by Gemini & emergency detection. Try a sample scenario or describe your symptoms." /><div className="demo-split wide-left"><Panel className="full-chat"><div className="sakura-chat-heading"><span className="sakura-brand">✳ Sakura AI</span><Badge><i className="status-dot" /> LIVE GEMINI TRIAGE</Badge></div><div className="demo-chat-message">Hello, {greetingName}. I'm Sakura. Share what you're experiencing, and I will cross-reference clinical datasets and recommend the right next step.</div>
-  {submitted && <><div className="demo-chat-message from-user">{submitted}</div>
-  {loading ? (
-    <div className="demo-triage-report" role="status">
-      <span className="eyebrow">CLINICAL INFERENCE RUNNING</span>
-      <h3>Sakura AI is analyzing symptom clusters…</h3>
-      <p>Evaluating emergency biomarkers and differential diagnoses via Gemini.</p>
-    </div>
-  ) : (
-    <div className={`demo-triage-report ${emergency ? 'emergency' : ''}`} role="status">
-      <span className="eyebrow">{emergency ? 'URGENT SIGNAL DETECTED' : 'RECOMMENDED SPECIALTY'}</span>
-      <h3>{emergency ? 'Please seek immediate emergency care.' : specialty}</h3>
-      <p>{emergency ? (triageData?.emergencyReason || 'Chest pain, acute breathing distress, or severe symptoms can be life-threatening. Call 112 in India or visit the nearest emergency department immediately. Do not wait for an online consultation.') : `Clinical evaluation indicates consulting a ${specialty.toLowerCase()}. A clinician will review your symptoms and history.`}</p>
-      
-      {triageData?.immediateActionPlan && triageData.immediateActionPlan.length > 0 && (
-        <div style={{ marginTop: '0.9rem', padding: '0.7rem 0.9rem', background: emergency ? 'rgba(239, 68, 68, 0.1)' : 'rgba(16, 121, 128, 0.08)', borderRadius: '6px', fontSize: '0.88rem' }}>
-          <strong>Immediate Action Steps:</strong>
-          <ul style={{ margin: '0.4rem 0 0 1.2rem', padding: 0 }}>
-            {triageData.immediateActionPlan.map((act, idx) => <li key={idx} style={{ marginBottom: '0.25rem' }}>{act}</li>)}
-          </ul>
-        </div>
-      )}
+  return (
+    <>
+      <PageHeading 
+        label="IRYO / AI CLINICAL COMPANION" 
+        title="Let's find your next step." 
+        description="Conversational symptom triage powered by NVIDIA Nemotron 3.5 Lightning. Talk directly with Iryo, explore differential diagnoses, and connect with clinical specialists." 
+      />
+      <div className="demo-split wide-left">
+        <Panel className="full-chat">
+          <div className="sakura-chat-heading" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingBottom: '16px', borderBottom: '1px solid var(--line)', marginBottom: '16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <span className="sakura-brand" style={{ fontWeight: 600, fontSize: '15px' }}>✳ Iryo AI</span>
+              <Badge><i className="status-dot" /> LIVE NEMOTRON CLINICAL ENGINE</Badge>
+            </div>
+            <button 
+              type="button" 
+              onClick={handleReset} 
+              disabled={loading}
+              style={{ background: 'transparent', border: '1px solid var(--line)', padding: '5px 11px', fontSize: '10px', cursor: 'pointer', borderRadius: '4px', color: '#567078' }}
+              title="Reset conversation session"
+            >
+              Start New Consultation ↺
+            </button>
+          </div>
 
-      {triageData?.differentialDiagnoses && triageData.differentialDiagnoses.length > 0 && (
-        <div style={{ marginTop: '0.9rem' }}>
-          <span className="eyebrow" style={{ display: 'block', marginBottom: '0.4rem' }}>DIFFERENTIAL DIAGNOSES (GEMINI AI ENGINE)</span>
-          <div style={{ display: 'grid', gap: '0.4rem' }}>
-            {triageData.differentialDiagnoses.map((diff, idx) => (
-              <div key={idx} className="demo-list-row" style={{ alignItems: 'flex-start', padding: '0.5rem 0' }}>
-                <div><strong>{diff.condition}</strong><div style={{ fontSize: '0.82rem', color: '#64748b', marginTop: '0.15rem' }}>{diff.reasoning}</div></div>
-                <Badge>{diff.probability}</Badge>
+          {/* Interactive Chat Stream */}
+          <div className="triage-messages-stream" style={{ display: 'flex', flexDirection: 'column', gap: '16px', minHeight: '360px', maxHeight: '560px', overflowY: 'auto', paddingRight: '8px', marginBottom: '18px' }}>
+            {messages.map(msg => {
+              if (msg.sender === 'user') {
+                return (
+                  <div key={msg.id} className="demo-chat-message from-user" style={{ maxWidth: '85%', alignSelf: 'flex-end', background: '#dae8df', borderRadius: '12px 0 12px 12px', padding: '14px 18px', border: '1px solid #10798022' }}>
+                    <div style={{ fontSize: '12.5px', lineHeight: 1.6, color: 'var(--ink)' }}>{msg.text}</div>
+                    <div style={{ fontSize: '9px', opacity: 0.65, marginTop: '6px', textAlign: 'right' }}>{msg.timestamp}</div>
+                  </div>
+                )
+              }
+
+              const msgSpecialty = msg.triageData?.recommendedSpecialty || msg.triageData?.recommendedSpecialist || 'General physician'
+              const msgDoctor = doctors.find(item => item.specialty.toLowerCase().includes(msgSpecialty.toLowerCase()) || msgSpecialty.toLowerCase().includes(item.specialty.toLowerCase())) || doctors[0]
+              const isEmerg = msg.triageData?.isEmergency
+
+              return (
+                <div key={msg.id} className="demo-chat-message" style={{ maxWidth: '92%', alignSelf: 'flex-start', background: '#f6fbf9', borderRadius: '0 12px 12px 12px', padding: '16px 20px', border: '1px solid #1079801f' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+                    <span style={{ fontWeight: 600, color: 'var(--teal)', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <span style={{ fontSize: '13px' }}>✳</span> Iryo AI • Clinical Companion
+                    </span>
+                    <span style={{ fontSize: '9px', color: '#64748b' }}>{msg.timestamp}</span>
+                  </div>
+
+                  <FormattedIryoMessage text={msg.text} />
+
+                  {/* Attached Clinical Triage Report Card if clinical data/symptoms exist */}
+                  {msg.triageData && (isEmerg || (msg.triageData.differentialDiagnoses && msg.triageData.differentialDiagnoses.length > 0)) && (
+                    <div style={{ marginTop: '16px', paddingTop: '14px', borderTop: '1px solid #10798022' }}>
+                      {isEmerg ? (
+                        <div className="demo-triage-report emergency" style={{ margin: '8px 0', padding: '16px', borderRadius: '6px' }}>
+                          <span className="eyebrow" style={{ color: '#b52230', fontWeight: 600 }}>🚨 CRITICAL EMERGENCY SIGNAL</span>
+                          <h4 style={{ fontFamily: 'var(--display)', fontSize: '18px', margin: '6px 0', color: '#b52230' }}>Immediate Clinical Emergency Attention Required</h4>
+                          <p style={{ fontSize: '11px', margin: '4px 0', color: '#567078' }}>
+                            {msg.triageData.emergencyReason || 'Acute symptoms require urgent physical assessment. Call 112 or visit Emergency Ground Floor Room 101 immediately.'}
+                          </p>
+                        </div>
+                      ) : (
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center', marginBottom: '10px' }}>
+                          {msg.triageData.triageBadge && <Badge>{msg.triageData.triageBadge}</Badge>}
+                          <span style={{ fontSize: '11px', color: '#475569' }}>
+                            Recommended Specialty: <strong style={{ color: 'var(--teal)' }}>{msgSpecialty}</strong>
+                          </span>
+                        </div>
+                      )}
+
+                      {/* Differential diagnoses */}
+                      {msg.triageData.differentialDiagnoses && msg.triageData.differentialDiagnoses.length > 0 && (
+                        <div style={{ marginTop: '10px' }}>
+                          <span className="eyebrow" style={{ display: 'block', marginBottom: '6px', fontSize: '8px' }}>DIFFERENTIAL DIAGNOSES (NVIDIA NEMOTRON ENGINE)</span>
+                          <div style={{ display: 'grid', gap: '6px' }}>
+                            {msg.triageData.differentialDiagnoses.map((diff, idx) => (
+                              <div key={idx} className="demo-list-row" style={{ alignItems: 'flex-start', padding: '6px 0', fontSize: '10px' }}>
+                                <div>
+                                  <strong>{diff.condition}</strong>
+                                  <div style={{ fontSize: '9px', color: '#64748b', marginTop: '2px' }}>{diff.reasoning}</div>
+                                </div>
+                                <Badge>{diff.probability}</Badge>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Immediate action plan */}
+                      {msg.triageData.immediateActionPlan && msg.triageData.immediateActionPlan.length > 0 && (
+                        <div style={{ marginTop: '10px', padding: '8px 12px', background: isEmerg ? 'rgba(239, 68, 68, 0.08)' : 'rgba(16, 121, 128, 0.06)', borderRadius: '6px', fontSize: '10.5px' }}>
+                          <strong>Recommended Next Steps:</strong>
+                          <ul style={{ margin: '4px 0 0 16px', padding: 0 }}>
+                            {msg.triageData.immediateActionPlan.map((act, idx) => <li key={idx} style={{ marginBottom: '2px' }}>{act}</li>)}
+                          </ul>
+                        </div>
+                      )}
+
+                      {/* Doctor booking CTA */}
+                      {!isEmerg && msgDoctor && (
+                        <div style={{ marginTop: '14px' }}>
+                          <Link className="button" style={{ padding: '9px 14px', fontSize: '10.5px' }} to={`/appointments?doctor=${encodeURIComponent(msgDoctor.name)}`}>
+                            Book appointment with {msgDoctor.name} ({msgDoctor.specialty}) <span>↗</span>
+                          </Link>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+
+            {loading && (
+              <div className="demo-chat-message" style={{ maxWidth: '80%', alignSelf: 'flex-start', background: '#f0fdf9', border: '1px solid #10798022', padding: '14px 18px', borderRadius: '0 12px 12px 12px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span className="status-dot" style={{ background: 'var(--teal)', animation: 'pulse 1s infinite' }} />
+                <span style={{ fontSize: '12px', color: 'var(--teal)', fontStyle: 'italic' }}>
+                  Iryo is thinking, analyzing clinical datasets & preparing guidance…
+                </span>
               </div>
-            ))}
+            )}
+            <div ref={messagesEndRef} />
+          </div>
+
+          {/* Chat Input */}
+          <form 
+            className="triage-input" 
+            onSubmit={event => { 
+              event.preventDefault()
+              if (input.trim()) { 
+                const text = input.trim()
+                setInput('')
+                runTriage(text)
+              } 
+            }}
+          >
+            <label htmlFor="symptoms" className="eyebrow" style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span>TALK WITH IRYO</span>
+              <span style={{ textTransform: 'none', letterSpacing: 'normal', color: '#64748b' }}>Press Enter to send</span>
+            </label>
+            <textarea 
+              id="symptoms" 
+              placeholder="Describe what you are experiencing, answer Iryo's questions, or ask for health guidance..." 
+              value={input} 
+              onChange={event => setInput(event.target.value)} 
+              onKeyDown={event => {
+                if (event.key === 'Enter' && !event.shiftKey) {
+                  event.preventDefault()
+                  if (input.trim()) {
+                    const text = input.trim()
+                    setInput('')
+                    runTriage(text)
+                  }
+                }
+              }}
+              maxLength={700} 
+              rows={3}
+              required 
+            />
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '6px' }}>
+              <button className="button" type="submit" disabled={loading || !input.trim()}>
+                {loading ? 'Iryo is replying…' : 'Send to Iryo AI'} <span>↗</span>
+              </button>
+            </div>
+          </form>
+        </Panel>
+
+        <div>
+          {/* Active summary card if clinical triage data exists */}
+          {latestTriage && (latestTriage.isEmergency || (latestTriage.differentialDiagnoses && latestTriage.differentialDiagnoses.length > 0)) && (
+            <Panel title="Active Triage Assessment" subtitle="CLINICAL SUMMARY">
+              <div style={{ marginBottom: '14px' }}>
+                <span className="eyebrow" style={{ display: 'block', marginBottom: '4px' }}>TRIAGE PRIORITY</span>
+                <Badge>{latestTriage.triageBadge || latestTriage.triageLevel || 'Routine'}</Badge>
+              </div>
+              <div style={{ marginBottom: '14px' }}>
+                <span className="eyebrow" style={{ display: 'block', marginBottom: '4px' }}>RECOMMENDED SPECIALTY</span>
+                <strong style={{ fontSize: '16px', color: 'var(--teal)' }}>{specialty}</strong>
+              </div>
+              {specialist && !emergency && (
+                <div style={{ marginTop: '16px', paddingTop: '12px', borderTop: '1px solid var(--line)' }}>
+                  <div style={{ fontSize: '11px', color: '#567078', marginBottom: '8px' }}>Available consulting doctor:</div>
+                  <strong>{specialist.name}</strong>
+                  <div style={{ fontSize: '10px', color: '#64748b', marginBottom: '10px' }}>{specialist.hospital}</div>
+                  <Link className="button" style={{ padding: '8px 12px', fontSize: '10px' }} to={`/appointments?doctor=${encodeURIComponent(specialist.name)}`}>
+                    Book Consultation <span>↗</span>
+                  </Link>
+                </div>
+              )}
+            </Panel>
+          )}
+
+          <Panel title="Try a consultation" subtitle="SAMPLE SCENARIOS">
+            <div className="quick-concerns">
+              {[presets.sinus, presets.skin, 'Chest pain and shortness of breath', 'Feeling tired and slight fever for 2 days'].map(text => (
+                <button 
+                  key={text} 
+                  type="button"
+                  onClick={() => runTriage(text)}
+                  disabled={loading}
+                >
+                  {text} ↗
+                </button>
+              ))}
+            </div>
+          </Panel>
+
+          <div className="demo-safety">
+            <span>✦</span>
+            <h3>AI Guidance with Boundaries.</h3>
+            <p>{latestTriage?.clinicalDisclaimer || 'Iryo AI is an assistive differential companion at Iryotek Hospital. It does not replace in-person clinical diagnosis. In case of acute emergencies, call 112 or visit an emergency room immediately.'}</p>
           </div>
         </div>
-      )}
-
-      {!emergency && specialist && (
-        <div style={{ marginTop: '1.2rem' }}>
-          <Link className="button" to={`/appointments?doctor=${encodeURIComponent(specialist.name)}`}>Book appointment with {specialist.name} <span>↗</span></Link>
-        </div>
-      )}
-    </div>
-  )}
-  </>}
-  <form className="triage-input" onSubmit={event => { event.preventDefault(); if (input.trim()) { runTriage(input.trim()); setInput('') } }}>
-    <label htmlFor="symptoms" className="eyebrow">DESCRIBE YOUR SYMPTOMS</label>
-    <textarea id="symptoms" placeholder="Describe symptoms, duration, severity..." value={input} onChange={event => setInput(event.target.value)} maxLength={700} required />
-    <button className="button" type="submit" disabled={loading}>{loading ? 'Analyzing…' : 'Analyze with Sakura AI'} <span>↗</span></button>
-  </form>
-  </Panel>
-  <div>
-    <Panel title="Try a consultation" subtitle="SAMPLE SCENARIOS">
-      <div className="quick-concerns">
-        {[presets.sinus, presets.skin, 'Chest pain and shortness of breath'].map(text => (
-          <button key={text} onClick={() => { setInput(text); runTriage(text) }}>{text} ↗</button>
-        ))}
       </div>
-    </Panel>
-    <div className="demo-safety">
-      <span>✦</span>
-      <h3>AI Guidance with Boundaries.</h3>
-      <p>{triageData?.clinicalDisclaimer || 'Sakura AI is an assistive differential tool. It does not replace clinical diagnosis. In case of acute medical emergencies, call 112 or visit an emergency room.'}</p>
-    </div>
-  </div>
-  </div></>
+    </>
+  )
 }
 
 interface DoctorRecommendedMedicine {
