@@ -1,6 +1,10 @@
 # IRYOTEK : Intelligent Healthcare Management Ecosystem
 
-https://github.com/user-attachments/assets/946ab98b-1787-4d04-9be6-f0e5fb4e7143
+<p align="center">
+  <a href="animation/animation.mp4">
+    <img src="docs/images/whiteboard_demo.gif" alt="Iryotek Healthcare Ecosystem Whiteboard Animation" width="100%" style="border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.12);" />
+  </a>
+</p>
 
 <p align="center">
   <strong>Next-Generation Hospital Information System, Clinical Workflow Dispatch, and Patient Care Platform</strong>
