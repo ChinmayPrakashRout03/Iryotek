@@ -97,9 +97,11 @@ Iryotek-Project/
 │   ├── architecture/             # System diagrams and schema contracts
 │   ├── images/                   # UI screenshots and animation assets
 │   └── maintenance/              # Repository audit and refactoring history
+├── docker/                       # Multi-container orchestration & container build definitions
+│   ├── Dockerfile
+│   ├── docker-compose.yml
+│   └── .dockerignore
 ├── scripts/                      # Platform utility and automation scripts
-├── Dockerfile                    # Multi-stage production container build (Maven + Tomcat)
-├── docker-compose.yml            # Multi-container orchestration (MySQL 8 + Tomcat 9)
 ├── .env.example                  # Environment configuration template
 └── README.md
 ```
@@ -120,7 +122,7 @@ Iryotek-Project/
 To start the database, Java backend, and Tomcat container in one command:
 
 ```bash
-docker compose up -d
+docker compose -f docker/docker-compose.yml up -d
 ```
 
 ### 2. Manual Development Setup

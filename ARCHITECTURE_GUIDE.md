@@ -90,8 +90,10 @@ Iryotek-Project/
 ├── scripts/                                  # Operational automation & administrative scripts
 │   └── delete_firebase_users.js
 │
-├── Dockerfile                                # Multi-stage build (Maven compiler + Tomcat runtime)
-├── docker-compose.yml                        # Multi-container orchestration (MySQL 8 + Tomcat 9)
+├── docker/                                   # Containerization & multi-service deployment
+│   ├── Dockerfile                            # Multi-stage build (Maven compiler + Tomcat runtime)
+│   ├── docker-compose.yml                    # Multi-container orchestration (MySQL 8 + Tomcat 9)
+│   └── .dockerignore                         # Docker build context exclusions
 ├── .env.example                              # Environment configuration template
 └── README.md                                 # Project landing documentation
 ```
