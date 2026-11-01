@@ -86,11 +86,8 @@ Iryotek-Project/
 │   ├── tsconfig.json             # TypeScript configuration
 │   ├── public/                   # Static assets
 │   └── src/                      # React views, components, catalog, and API layer
-├── animation/                    # 30-second whiteboard animation & generator CLI
-│   ├── iryotek_whiteboard_animation_30s.mp4 # Full HD 1080p whiteboard animation video
-│   ├── iryotek_whiteboard_animation.gif     # Animated GIF demo
-│   ├── source_illustration.jpg              # High-contrast vector source illustration
-│   └── render_whiteboard.py                 # Standalone whiteboard animation renderer
+├── animation/                    # Healthcare whiteboard animation video
+│   └── animation.mp4             # Explainer animation video
 ├── database/                     # MySQL setup scripts and seed datasets
 │   ├── init-scripts/             # Database initialization schemas (run in sequence)
 │   └── dataset/                  # Structured medicine and hospital catalogs
@@ -147,14 +144,11 @@ Deploy the generated `target/Iryotek.war` to your local Apache Tomcat `webapps/`
 
 ---
 
-## Whiteboard Animation Generator
+## Healthcare Whiteboard Animation
 
-The repository includes a dedicated CLI tool to render custom whiteboard animations using stroke-path and color-clustering algorithms:
+The project includes an explainer animation video showcasing the Iryotek connected healthcare experience:
 
-```bash
-# Render a 30-second detailed animation from any illustration
-python3 animation/render_whiteboard.py --image animation/source_illustration.jpg --duration 30.0
-```
+* Video: [`animation/animation.mp4`](animation/animation.mp4)
 
 ---
 
