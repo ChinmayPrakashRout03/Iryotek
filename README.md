@@ -36,9 +36,9 @@ Iryotek is a modular healthcare platform connecting patients, clinicians, hospit
       <b>3D Interactive Landing & Experience View</b>
     </td>
     <td width="50%" align="center">
-      <img src="docs/images/live_care_portal.png" alt="Clinical Care Portal" width="100%" style="border-radius: 8px;" />
+      <img src="docs/images/live_care_portal.png" alt="My Profile & Clinical Records" width="100%" style="border-radius: 8px;" />
       <br />
-      <b>Patient & Clinician Care Hub</b>
+      <b>My Profile</b>
     </td>
   </tr>
   <tr>
