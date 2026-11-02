@@ -306,26 +306,36 @@ export async function loginPatientWithGoogle(): Promise<AuthUser> {
   const provider = new window.firebase.auth.GoogleAuthProvider()
   provider.addScope('profile')
   provider.addScope('email')
-
-  const isAndroidApp = typeof window !== 'undefined' && (
-    window.location.hostname === 'appassets.androidplatform.net' ||
-    window.location.protocol === 'file:' ||
-    /Android.*Version\/[0-9.]+/i.test(navigator.userAgent)
-  )
+  provider.setCustomParameters({ prompt: 'select_account' })
 
   try {
+    // Attempt signInWithPopup first. Google OAuth strictly rejects signInWithRedirect from
+    // non-public schemes like 'appassets.androidplatform.net' or 'file://' with Error 400 (redirect_uri_mismatch).
+    // signInWithPopup executes via 'https://iryotek-c7b5c.firebaseapp.com/__/auth/handler' which is fully authorized.
     let result: any = null
-    if (isAndroidApp) {
-      // In Android WebView, check for redirect result first
-      const redirectResult = await auth.getRedirectResult().catch(() => null)
-      if (redirectResult && redirectResult.user) {
-        result = redirectResult
-      } else {
-        await auth.signInWithRedirect(provider)
-        return new Promise(() => {}) // Navigation will proceed
-      }
-    } else {
+    try {
       result = await auth.signInWithPopup(provider)
+    } catch (popupErr: any) {
+      console.warn('[Google Auth] Popup attempt returned:', popupErr)
+      if (
+        popupErr.code === 'auth/popup-blocked' ||
+        popupErr.code === 'auth/operation-not-supported-in-this-environment' ||
+        popupErr.message?.includes('popup')
+      ) {
+        // If in a standard web browser on public origin, fallback to redirect
+        if (
+          typeof window !== 'undefined' &&
+          window.location.protocol === 'https:' &&
+          window.location.hostname !== 'appassets.androidplatform.net'
+        ) {
+          await auth.signInWithRedirect(provider)
+          return new Promise(() => {}) // Navigation will proceed
+        }
+        throw new Error(
+          "Google Sign-In popup was blocked by your browser or WebView. Please allow popups, or sign in securely using real Firebase Email & Password or Phone OTP below."
+        )
+      }
+      throw popupErr
     }
 
     if (!result || !result.user) {
@@ -350,7 +360,7 @@ export async function loginPatientWithGoogle(): Promise<AuthUser> {
     console.error('[Google Auth] Real Firebase Google Sign-In failed:', err)
     if (err.code === 'auth/unauthorized-domain' || err.message?.includes('unauthorized') || err.message?.includes('invalid')) {
       throw new Error(
-        "Google Sign-In domain authorization pending: Add 'appassets.androidplatform.net' to Authorized Domains in Firebase Console (Authentication > Settings > Authorized domains). Or sign in with real Firebase Email & Password below."
+        "Google Sign-In domain authorization pending: Add 'appassets.androidplatform.net' to Authorized Domains in Firebase Console. Or sign in with real Firebase Email & Password below."
       )
     }
     if (err.code === 'auth/popup-closed-by-user') {
