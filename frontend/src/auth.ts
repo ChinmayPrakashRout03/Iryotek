@@ -298,17 +298,6 @@ export function generateDatasetDoctorEmail(firstName: string, middleName: string
    ========================================================================= */
 
 export async function loginPatientWithGoogle(): Promise<AuthUser> {
-  const isAndroidApp = typeof window !== 'undefined' && (
-    window.location.hostname === 'appassets.androidplatform.net' ||
-    window.location.protocol === 'file:'
-  )
-
-  // In Android APK, Google OAuth strictly rejects appassets.androidplatform.net (Google 400 redirect_uri_mismatch)
-  // and multiple windows/popups are restricted in WebView.
-  if (isAndroidApp) {
-    throw new Error('OPEN_GOOGLE_MODAL')
-  }
-
   const auth = initFirebase()
   if (!auth || !window.firebase) {
     throw new Error('Firebase Authentication is not available. Please verify your internet connection.')
@@ -319,132 +308,49 @@ export async function loginPatientWithGoogle(): Promise<AuthUser> {
   provider.addScope('email')
   provider.setCustomParameters({ prompt: 'select_account' })
 
+  let result: any = null
   try {
-    let result: any = null
-    try {
-      result = await auth.signInWithPopup(provider)
-    } catch (popupErr: any) {
-      console.warn('[Google Auth] Popup attempt returned:', popupErr)
+    result = await auth.signInWithPopup(provider)
+  } catch (popupErr: any) {
+    console.warn('[Google Auth] Popup attempt returned:', popupErr)
+    if (
+      popupErr.code === 'auth/popup-blocked' ||
+      popupErr.code === 'auth/operation-not-supported-in-this-environment' ||
+      popupErr.message?.includes('popup')
+    ) {
       if (
-        popupErr.code === 'auth/popup-blocked' ||
-        popupErr.code === 'auth/operation-not-supported-in-this-environment' ||
-        popupErr.message?.includes('popup')
+        typeof window !== 'undefined' &&
+        window.location.protocol === 'https:' &&
+        window.location.hostname !== 'appassets.androidplatform.net'
       ) {
-        // If in a standard web browser on public origin, fallback to redirect
-        if (
-          typeof window !== 'undefined' &&
-          window.location.protocol === 'https:' &&
-          window.location.hostname !== 'appassets.androidplatform.net'
-        ) {
-          await auth.signInWithRedirect(provider)
-          return new Promise(() => {}) // Navigation will proceed
-        }
-        throw new Error('OPEN_GOOGLE_MODAL')
+        await auth.signInWithRedirect(provider)
+        return new Promise(() => {}) // Navigation will proceed
       }
-      throw popupErr
+      throw new Error(
+        'Google Sign-In popup is restricted in this WebView. Please use real Firebase Email & Password or Phone OTP below.'
+      )
     }
-
-    if (!result || !result.user) {
-      throw new Error('No user credential was returned from Google Sign-In.')
-    }
-
-    const u = result.user
-    const cloudProfile = await getPatientProfileFirestore(u.uid, u.email || undefined).catch(() => null)
-    const user: AuthUser = {
-      uid: u.uid,
-      displayName: cloudProfile?.fullName || u.displayName || u.email?.split('@')[0] || 'Patient User',
-      email: u.email || undefined,
-      photoURL: u.photoURL || undefined,
-      role: 'Patient',
-      authProvider: 'Google Auth',
-      access: 'Appointments, Telehealth & Pharmacy',
-      patientProfile: cloudProfile || undefined
-    }
-    setStoredUser(user)
-    return user
-  } catch (err: any) {
-    if (err.message === 'OPEN_GOOGLE_MODAL') {
-      throw err
-    }
-    console.error('[Google Auth] Real Firebase Google Sign-In failed:', err)
-    if (err.code === 'auth/popup-closed-by-user') {
+    if (popupErr.code === 'auth/popup-closed-by-user') {
       throw new Error('Google Sign-In was closed before completing.')
     }
-    throw new Error(err.message || 'Google Sign-In failed with Firebase Authentication.')
-  }
-}
-
-export async function loginPatientWithGoogleAccount(gmail?: string, pass?: string, fullName?: string): Promise<AuthUser> {
-  const normalizedEmail = (gmail && gmail.trim().includes('@') ? gmail.trim() : 'patient.google@iryotek.health').toLowerCase()
-  const password = pass && pass.trim().length >= 6 ? pass.trim() : 'GoogleAuth@Iryotek2025!'
-  const displayName = fullName || normalizedEmail.split('@')[0].replace(/[._]/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
-  const auth = initFirebase()
-  
-  if (auth) {
-    try {
-      // 1. Attempt to sign in with email & password
-      const res = await auth.signInWithEmailAndPassword(normalizedEmail, password)
-      const u = res.user
-      const cloudProfile = await getPatientProfileFirestore(u.uid, normalizedEmail).catch(() => null)
-      const user: AuthUser = {
-        uid: u.uid,
-        displayName: cloudProfile?.fullName || u.displayName || displayName,
-        email: u.email || normalizedEmail,
-        photoURL: u.photoURL || undefined,
-        role: 'Patient',
-        authProvider: 'Google Auth',
-        access: 'Appointments, Telehealth & Pharmacy',
-        patientProfile: cloudProfile || undefined
-      }
-      setStoredUser(user)
-      return user
-    } catch (err: any) {
-      if (err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential' || err.code === 'auth/invalid-email') {
-        try {
-          // If user doesn't exist, create patient account in Firebase
-          const newRes = await auth.createUserWithEmailAndPassword(normalizedEmail, password)
-          const u = newRes.user
-          const newProfile: PatientHealthProfile = {
-            fullName: displayName,
-            email: normalizedEmail,
-            uid: u.uid
-          }
-          await savePatientProfileFirestore(u.uid, newProfile).catch(() => null)
-          const user: AuthUser = {
-            uid: u.uid,
-            displayName: displayName,
-            email: normalizedEmail,
-            role: 'Patient',
-            authProvider: 'Google Auth',
-            access: 'Appointments, Telehealth & Pharmacy',
-            patientProfile: newProfile
-          }
-          setStoredUser(user)
-          return user
-        } catch (createErr: any) {
-          if (createErr.code === 'auth/email-already-in-use') {
-            throw new Error('This Google account is already registered in Iryotek with a custom password. Please enter your existing password.')
-          }
-          throw new Error(createErr.message || 'Google account sign-in failed.')
-        }
-      }
-      if (err.code === 'auth/wrong-password') {
-        throw new Error('Incorrect password for this Google account. Please enter the correct password.')
-      }
-      throw new Error(err.message || 'Google sign-in failed.')
-    }
+    throw popupErr
   }
 
-  // Local fallback if Firebase network is offline
-  const localProfile = await getPatientProfileFirestore('pat_' + normalizedEmail, normalizedEmail).catch(() => null)
+  if (!result || !result.user) {
+    throw new Error('No user credential was returned from Google Sign-In.')
+  }
+
+  const u = result.user
+  const cloudProfile = await getPatientProfileFirestore(u.uid, u.email || undefined).catch(() => null)
   const user: AuthUser = {
-    uid: localProfile?.uid || 'pat_' + Date.now(),
-    displayName: localProfile?.fullName || displayName,
-    email: normalizedEmail,
+    uid: u.uid,
+    displayName: cloudProfile?.fullName || u.displayName || u.email?.split('@')[0] || 'Patient User',
+    email: u.email || undefined,
+    photoURL: u.photoURL || undefined,
     role: 'Patient',
     authProvider: 'Google Auth',
     access: 'Appointments, Telehealth & Pharmacy',
-    patientProfile: localProfile || undefined
+    patientProfile: cloudProfile || undefined
   }
   setStoredUser(user)
   return user
@@ -455,7 +361,6 @@ export async function loginPatientWithEmail(identifier: string, pass: string): P
   let normalizedEmail = trimmed.toLowerCase()
   let isPhoneLogin = false
   let resolvedPhone = ''
-  let localAccountMatch: any = null
 
   // Check if identifier is a mobile phone number (doesn't contain '@')
   if (!trimmed.includes('@')) {
@@ -466,24 +371,11 @@ export async function loginPatientWithEmail(identifier: string, pass: string): P
       throw new Error(`No patient account found with mobile phone number "${trimmed}". Please sign in with your email or register an account.`)
     }
     normalizedEmail = matchedAccount.email.trim().toLowerCase()
-    localAccountMatch = matchedAccount
   }
 
   const auth = initFirebase()
   if (!auth) {
-    const localProfile = localAccountMatch?.profile || await getPatientProfileFirestore(localAccountMatch?.uid || 'pat_' + normalizedEmail, normalizedEmail)
-    const user: AuthUser = {
-      uid: localProfile?.uid || localAccountMatch?.uid || 'pat_' + Date.now(),
-      displayName: localProfile?.fullName || normalizedEmail.split('@')[0],
-      email: normalizedEmail,
-      phoneNumber: localProfile?.phone || (isPhoneLogin ? resolvedPhone : undefined),
-      role: 'Patient',
-      authProvider: isPhoneLogin ? 'Mobile Phone & Password' : 'Email & Password',
-      access: 'Appointments, Telehealth & Pharmacy',
-      patientProfile: localProfile || undefined
-    }
-    setStoredUser(user)
-    return user
+    throw new Error('Firebase Authentication is not available. Please check your internet connection.')
   }
 
   try {
@@ -504,31 +396,17 @@ export async function loginPatientWithEmail(identifier: string, pass: string): P
     setStoredUser(user)
     return user
   } catch (err: any) {
-    // Check if account exists in persistent local registry (offline/fallback account)
-    try {
-      const registry = JSON.parse(localStorage.getItem('iryotek_registered_patients') || '{}')
-      const entry = registry[normalizedEmail] || localAccountMatch
-      if (entry && (!entry.password || entry.password === pass)) {
-        const user: AuthUser = {
-          uid: entry.uid || 'pat_' + Date.now(),
-          displayName: entry.profile?.fullName || normalizedEmail.split('@')[0],
-          email: normalizedEmail,
-          phoneNumber: entry.profile?.phone || (isPhoneLogin ? resolvedPhone : undefined),
-          role: 'Patient',
-          authProvider: isPhoneLogin ? 'Mobile Phone & Password' : 'Email & Password',
-          access: 'Appointments, Telehealth & Pharmacy',
-          patientProfile: entry.profile
-        }
-        setStoredUser(user)
-        return user
-      }
-    } catch {}
-
     if (isPhoneLogin) {
       if (err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
         throw new Error('Incorrect password for the account linked to this mobile number.')
       }
       throw new Error(err.message || 'Failed to sign in with mobile number & password.')
+    }
+    if (err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
+      throw new Error('Incorrect email or password. Please verify your credentials.')
+    }
+    if (err.code === 'auth/user-not-found') {
+      throw new Error('No patient account found with this email. Please create an account.')
     }
     throw new Error(err.message || 'Failed to sign in with email & password.')
   }
@@ -537,7 +415,6 @@ export async function loginPatientWithEmail(identifier: string, pass: string): P
 export async function registerPatientWithEmail(name: string, email: string, pass: string, profile?: PatientHealthProfile): Promise<AuthUser> {
   const normalizedEmail = email.trim().toLowerCase()
   const phone = profile?.phone || profile?.emergencyContact?.phone || ''
-  const cleanPhone = cleanPhoneNumber(phone)
   const fullProfile: PatientHealthProfile = {
     ...profile,
     fullName: profile?.fullName || name.trim(),
@@ -545,67 +422,25 @@ export async function registerPatientWithEmail(name: string, email: string, pass
     phone: phone,
   }
 
-  // Pre-save into local persistent registry right away so it is GUARANTEED to exist
-  try {
-    const registry = JSON.parse(localStorage.getItem('iryotek_registered_patients') || '{}')
-    registry[normalizedEmail] = {
-      uid: 'pat_' + Date.now(),
-      password: pass,
-      phone: phone,
-      profile: fullProfile,
-      updatedAt: new Date().toISOString()
-    }
-    localStorage.setItem('iryotek_registered_patients', JSON.stringify(registry))
-    localStorage.setItem('iryotek_patient_profile_' + normalizedEmail, JSON.stringify(fullProfile))
-
-    // Save phone reverse mapping
-    if (cleanPhone) {
-      const phoneMap = JSON.parse(localStorage.getItem('iryotek_registered_phones') || '{}')
-      phoneMap[cleanPhone] = normalizedEmail
-      localStorage.setItem('iryotek_registered_phones', JSON.stringify(phoneMap))
-    }
-  } catch {}
-
   const auth = initFirebase()
   if (!auth) {
-    const user: AuthUser = {
-      uid: 'pat_' + Date.now(),
-      displayName: name || email.split('@')[0],
-      email,
-      phoneNumber: phone || undefined,
-      role: 'Patient',
-      authProvider: 'Email & Password',
-      access: 'Appointments, Telehealth & Pharmacy',
-      patientProfile: fullProfile
-    }
-    setStoredUser(user)
-    return user
+    throw new Error('Firebase Authentication is not available. Please check your internet connection.')
   }
 
-  let u: any = null
-  try {
-    const res = await auth.createUserWithEmailAndPassword(email, pass)
-    u = res.user
-    if (u && name) {
-      await u.updateProfile({ displayName: name }).catch(() => {})
-    }
-  } catch (firebaseErr: any) {
-    console.warn('[Iryotek Auth] Firebase createUser error, activating verified patient account locally:', firebaseErr)
-    u = {
-      uid: 'pat_' + Date.now(),
-      email,
-      displayName: name || email.split('@')[0]
-    }
+  const res = await auth.createUserWithEmailAndPassword(normalizedEmail, pass)
+  const u = res.user
+  if (u && name.trim()) {
+    await u.updateProfile({ displayName: name.trim() }).catch(() => {})
   }
   fullProfile.uid = u.uid
 
-  // Save to Firestore and local storage with real Firebase UID
+  // Save to Firestore with real Firebase UID
   await savePatientProfileFirestore(u.uid, fullProfile).catch(err => console.warn('[Iryotek Auth] Firestore profile sync note:', err))
 
   const user: AuthUser = {
     uid: u.uid,
-    displayName: name || u.email?.split('@')[0] || 'Patient User',
-    email: u.email || email,
+    displayName: name.trim() || u.email?.split('@')[0] || 'Patient User',
+    email: u.email || normalizedEmail,
     phoneNumber: phone || undefined,
     role: 'Patient',
     authProvider: 'Email & Password',
